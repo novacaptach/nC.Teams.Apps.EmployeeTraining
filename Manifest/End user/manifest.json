@@ -5,10 +5,10 @@
   "id": "eb3d21e5-1635-4334-a625-19249df25173",
   "packageName": "com.microsoft.teams.employeetraining",
   "developer": {
-    "name": "<<companyName>>",
-    "websiteUrl": "<<websiteUrl>>",
-    "privacyUrl": "<<privacyUrl>>",
-    "termsOfUseUrl": "<<termsOfUseUrl>>"
+    "name": "novaCapta",
+    "websiteUrl": "https://www.novacapta.ch/",
+    "privacyUrl": "https://www.novacapta.ch/",
+    "termsOfUseUrl": "https://www.novacapta.ch/"
   },
   "localizationInfo": {
     "defaultLanguageTag": "en",
@@ -82,24 +82,21 @@
       "name": "Discover events",
       "contentUrl": "https://<<appDomain>>/discover-events",
       "websiteUrl": "https://<<appDomain>>/discover-events",
-      "scopes": [ "personal" ]
+      "scopes": ["personal"]
     },
     {
       "entityId": "my-events",
       "name": "Your events",
       "contentUrl": "https://<<appDomain>>/my-events",
       "websiteUrl": "https://<<appDomain>>/my-events",
-      "scopes": [ "personal" ]
+      "scopes": ["personal"]
     }
   ],
   "bots": [
     {
       "botId": "<<botId>>",
-      "scopes": [
-        "personal"
-      ],
-      "commandLists": [
-      ],
+      "scopes": ["personal"],
+      "commandLists": [],
       "supportsFiles": false,
       "isNotificationOnly": false
     }
@@ -138,13 +135,8 @@
       ]
     }
   ],
-  "permissions": [
-    "identity",
-    "messageTeamMembers"
-  ],
-  "validDomains": [
-    "<<appDomain>>"
-  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["<<appDomain>>"],
   "webApplicationInfo": {
     "id": "<<botId>>",
     "resource": "api://<<appDomain>>/<<botId>>"

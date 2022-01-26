@@ -5,10 +5,10 @@
   "id": "eb3d22e5-1645-4334-a625-19249df25173",
   "packageName": "com.microsoft.teams.employeetraining",
   "developer": {
-    "name": "<<companyName>>",
-    "websiteUrl": "<<websiteUrl>>",
-    "privacyUrl": "<<privacyUrl>>",
-    "termsOfUseUrl": "<<termsOfUseUrl>>"
+    "name": "novaCapta",
+    "websiteUrl": "https://www.novacapta.ch/",
+    "privacyUrl": "https://www.novacapta.ch/",
+    "termsOfUseUrl": "https://www.novacapta.ch/"
   },
   "localizationInfo": {
     "defaultLanguageTag": "en",
@@ -82,18 +82,16 @@
       "name": "Manage events",
       "contentUrl": "https://<<appDomain>>/manage-events",
       "websiteUrl": "https://<<appDomain>>/manage-events",
-      "scopes": [ "team" ]
+      "scopes": ["team"]
     }
   ],
   "bots": [
     {
       "botId": "<<botId>>",
-      "scopes": [
-        "team"
-      ],
+      "scopes": ["team"],
       "commandLists": [
         {
-          "scopes": [ "team" ],
+          "scopes": ["team"],
           "commands": [
             {
               "title": "Add event",
@@ -106,13 +104,8 @@
       "isNotificationOnly": false
     }
   ],
-  "permissions": [
-    "identity",
-    "messageTeamMembers"
-  ],
-  "validDomains": [
-    "<<appDomain>>"
-  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["<<appDomain>>"],
   "webApplicationInfo": {
     "id": "<<botId>>",
     "resource": "api://<<appDomain>>/<<botId>>"
