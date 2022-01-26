@@ -25,16 +25,14 @@ namespace Microsoft.Teams.Apps.EmployeeTraining
     using Microsoft.Teams.Apps.EmployeeTraining.Models.Configuration;
 
     /// <summary>
-    /// The Startup class is responsible for configuring the DI container and acts as the composition root.
+    ///     The Startup class is responsible for configuring the DI container and acts as the composition root.
     /// </summary>
     public sealed class Startup
     {
         private readonly IConfiguration configuration;
 
-        private IWebHostEnvironment CurrentEnvironment { get; set; }
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="Startup"/> class.
+        ///     Initializes a new instance of the <see cref="Startup" /> class.
         /// </summary>
         /// <param name="configuration">The environment provided configuration.</param>
         /// <param name="environment">The environment details</param>
@@ -44,16 +42,18 @@ namespace Microsoft.Teams.Apps.EmployeeTraining
         {
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             this.CurrentEnvironment = environment;
-            this.GetKeyVaultByManagedServiceIdentity();
+            this.GetKeyVaultByManagedServiceIdentity().Wait();
             this.ValidateConfigurationSettings();
         }
 
+        private IWebHostEnvironment CurrentEnvironment { get; }
+
         /// <summary>
-        /// Configure the composition root for the application.
+        ///     Configure the composition root for the application.
         /// </summary>
         /// <param name="services">The stub composition root.</param>
         /// <remarks>
-        /// For more information see: https://go.microsoft.com/fwlink/?LinkID=398940.
+        ///     For more information see: https://go.microsoft.com/fwlink/?LinkID=398940.
         /// </remarks>
 #pragma warning disable CA1506 // Composition root expected to have coupling with many components.
         public void ConfigureServices(IServiceCollection services)
@@ -69,13 +69,11 @@ namespace Microsoft.Teams.Apps.EmployeeTraining
             services.AddSingleton<TelemetryClient>();
 
             services
-                .AddApplicationInsightsTelemetry(this.configuration.GetValue<string>("ApplicationInsights:InstrumentationKey"));
+                .AddApplicationInsightsTelemetry(
+                    this.configuration.GetValue<string>("ApplicationInsights:InstrumentationKey"));
 
             // In production, the React files will be served from this directory.
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/build";
-            });
+            services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
 
             services.RegisterBotStates(this.configuration);
 
@@ -91,7 +89,8 @@ namespace Microsoft.Teams.Apps.EmployeeTraining
 
             // Create the Activity middle-ware that will be added to the middle-ware pipeline in the AdapterWithErrorHandler.
             services.AddSingleton<EmployeeTrainingActivityMiddleware>();
-            services.AddTransient(serviceProvider => (BotFrameworkAdapter)serviceProvider.GetRequiredService<IBotFrameworkHttpAdapter>());
+            services.AddTransient(serviceProvider =>
+                (BotFrameworkAdapter)serviceProvider.GetRequiredService<IBotFrameworkHttpAdapter>());
 
             // Add i18n.
             services.RegisterLocalizationSettings(this.configuration);
@@ -100,7 +99,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining
 #pragma warning restore CA1506
 
         /// <summary>
-        /// Configure the application request pipeline.
+        ///     Configure the application request pipeline.
         /// </summary>
         /// <param name="app">The application.</param>
         /// <param name="env">Hosting Environment.</param>
@@ -120,13 +119,13 @@ namespace Microsoft.Teams.Apps.EmployeeTraining
 
                 if (env.EnvironmentName.ToUpperInvariant() == "DEVELOPMENT")
                 {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
+                    spa.UseReactDevelopmentServer("start");
                 }
             });
         }
 
         /// <summary>
-        /// Validate whether the configuration settings are missing or not.
+        ///     Validate whether the configuration settings are missing or not.
         /// </summary>
         private void ValidateConfigurationSettings()
         {
@@ -159,62 +158,57 @@ namespace Microsoft.Teams.Apps.EmployeeTraining
                 throw new ApplicationException("Manifest Id is missing in the configuration file.");
             }
 
-            if (this.configuration.GetValue<int?>("App:CacheDurationInMinutes") == null || this.configuration.GetValue<int>("App:CacheDurationInMinutes") < 1)
+            if (this.configuration.GetValue<int?>("App:CacheDurationInMinutes") == null ||
+                this.configuration.GetValue<int>("App:CacheDurationInMinutes") < 1)
             {
-                throw new ApplicationException("Invalid chache duration value in the configuration file.");
+                throw new ApplicationException("Invalid cache duration value in the configuration file.");
             }
 
-            if (this.configuration.GetValue<int?>("App:EventsPageSize") == null || this.configuration.GetValue<int>("App:EventsPageSize") < 30)
+            if (this.configuration.GetValue<int?>("App:EventsPageSize") == null ||
+                this.configuration.GetValue<int>("App:EventsPageSize") < 30)
             {
-                throw new ApplicationException("Invalid events page size value in the configuration file. The minimum value must be 30.");
+                throw new ApplicationException(
+                    "Invalid events page size value in the configuration file. The minimum value must be 30.");
             }
         }
 
         /// <summary>
-        /// Get KeyVault secrets and app settings values
+        ///     Get KeyVault secrets and app settings values
         /// </summary>
-        private void GetKeyVaultByManagedServiceIdentity()
+        private async Task GetKeyVaultByManagedServiceIdentity()
         {
-            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+            var azureServiceTokenProvider = new AzureServiceTokenProvider();
 
             if (this.CurrentEnvironment.IsDevelopment())
             {
-                Task<string> accessToken = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net");
-                accessToken.Wait();
+                var accessToken = await azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net")
+                    .ConfigureAwait(false);
             }
 
-            using (var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
-            {
-                var storageSecretValue = keyVaultClient.GetSecretAsync($"{this.configuration["KeyVault:BaseURL"]}{this.configuration["KeyVaultStrings:StorageConnection"]}");
+            using var keyVaultClient =
+                new KeyVaultClient(
+                    new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
 
-                storageSecretValue.Wait();
-                this.configuration["Storage:ConnectionString"] = storageSecretValue.Result.Value;
+            this.configuration["Storage:ConnectionString"] =
+                await this.GetValueFromKeyVault(keyVaultClient, "StorageConnection").ConfigureAwait(false);
+            this.configuration["MicrosoftAppId"] =
+                await this.GetValueFromKeyVault(keyVaultClient, "MicrosoftAppId").ConfigureAwait(false);
+            this.configuration["MicrosoftAppPassword"] =
+                await this.GetValueFromKeyVault(keyVaultClient, "MicrosoftAppPassword").ConfigureAwait(false);
+            this.configuration["SearchService:SearchServiceName"] =
+                await this.GetValueFromKeyVault(keyVaultClient, "SearchServiceName").ConfigureAwait(false);
+            this.configuration["SearchService:SearchServiceAdminApiKey"] =
+                await this.GetValueFromKeyVault(keyVaultClient, "SearchServiceAdminApiKey").ConfigureAwait(false);
+            this.configuration["SearchService:SearchServiceQueryApiKey"] =
+                await this.GetValueFromKeyVault(keyVaultClient, "SearchServiceQueryApiKey").ConfigureAwait(false);
+        }
 
-                var appIdSecretValue = keyVaultClient.GetSecretAsync($"{this.configuration["KeyVault:BaseURL"]}{this.configuration["KeyVaultStrings:MicrosoftAppId"]}");
-
-                appIdSecretValue.Wait();
-                this.configuration["MicrosoftAppId"] = appIdSecretValue.Result.Value;
-
-                var appPasswordSecretValue = keyVaultClient.GetSecretAsync($"{this.configuration["KeyVault:BaseURL"]}{this.configuration["KeyVaultStrings:MicrosoftAppPassword"]}");
-
-                appPasswordSecretValue.Wait();
-                this.configuration["MicrosoftAppPassword"] = appPasswordSecretValue.Result.Value;
-
-                var searchServiceNameSecretValue = keyVaultClient.GetSecretAsync($"{this.configuration["KeyVault:BaseURL"]}{this.configuration["KeyVaultStrings:SearchServiceName"]}");
-
-                searchServiceNameSecretValue.Wait();
-                this.configuration["SearchService:SearchServiceName"] = searchServiceNameSecretValue.Result.Value;
-
-                var searchServiceAdminApiKeySecretValue = keyVaultClient.GetSecretAsync($"{this.configuration["KeyVault:BaseURL"]}{this.configuration["KeyVaultStrings:SearchServiceAdminApiKey"]}");
-
-                searchServiceAdminApiKeySecretValue.Wait();
-                this.configuration["SearchService:SearchServiceAdminApiKey"] = searchServiceAdminApiKeySecretValue.Result.Value;
-
-                var searchServiceQueryApiKeySecretValue = keyVaultClient.GetSecretAsync($"{this.configuration["KeyVault:BaseURL"]}{this.configuration["KeyVaultStrings:SearchServiceQueryApiKey"]}");
-
-                searchServiceQueryApiKeySecretValue.Wait();
-                this.configuration["SearchService:SearchServiceQueryApiKey"] = searchServiceQueryApiKeySecretValue.Result.Value;
-            }
+        private async Task<string> GetValueFromKeyVault(IKeyVaultClient keyVaultClient, string keyVaultString)
+        {
+            var secret = await keyVaultClient.GetSecretAsync(
+                this.configuration["KeyVault:BaseURL"],
+                this.configuration[$"KeyVaultStrings:{keyVaultString}"]).ConfigureAwait(false);
+            return secret?.Value;
         }
     }
 }
