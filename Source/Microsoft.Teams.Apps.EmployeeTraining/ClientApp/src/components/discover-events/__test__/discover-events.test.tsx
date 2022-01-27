@@ -3,6 +3,7 @@ import DiscoverEvents from "../discover-events";
 import { Provider } from "@fluentui/react-northstar";
 import { render, unmountComponentAtNode } from "react-dom";
 import { act } from "react-dom/test-utils";
+import pretty from "pretty";
 
 jest.mock("../../../api/user-events-api");
 jest.mock("../../../api/create-event-api");

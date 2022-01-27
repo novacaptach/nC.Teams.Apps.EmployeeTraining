@@ -7,6 +7,7 @@ import CreateEventWrapper from "../create-event-wrapper";
 import { Provider } from "@fluentui/react-northstar";
 import { render, unmountComponentAtNode } from "react-dom";
 import { act } from "react-dom/test-utils";
+import pretty from "pretty";
 
 jest.mock("../../../api/common-api");
 jest.mock("../../../api/user-group-api");

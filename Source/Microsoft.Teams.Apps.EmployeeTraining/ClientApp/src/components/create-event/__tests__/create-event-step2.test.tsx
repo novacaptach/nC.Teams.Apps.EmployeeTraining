@@ -9,6 +9,7 @@ import { render, unmountComponentAtNode } from "react-dom";
 import { act } from "react-dom/test-utils";
 import TestData from "../../../api/test-data/test-data";
 import { LanguageDirection } from "../../../models/language-direction";
+import pretty from "pretty";
 
 jest.mock("../../../api/common-api");
 jest.mock("../../../api/user-group-api");

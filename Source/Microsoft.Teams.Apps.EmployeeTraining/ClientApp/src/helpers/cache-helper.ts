@@ -29,7 +29,7 @@ export const getDataFromCache = (cacheName: string) => {
       }
     }
   } catch (e) {
-    console.error(e.message);
+    handleError(e);
   }
 
   return supportedCultureCache;
@@ -48,7 +48,13 @@ export const setDataToCache = (cacheName: string, key: string, value: any) => {
   try {
     localStorage.setItem(cacheName, JSON.stringify(supportedCultureCache));
   } catch (e) {
-    console.error(e.message);
+    handleError(e);
     localStorage.removeItem(cacheName);
+  }
+};
+
+const handleError = (error: any) => {
+  if (error.hasOwnProperty("message")) {
+    console.error(error.message);
   }
 };
