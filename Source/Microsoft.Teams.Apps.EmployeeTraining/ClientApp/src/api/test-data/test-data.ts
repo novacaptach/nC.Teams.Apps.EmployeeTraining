@@ -4,6 +4,7 @@ import { EventType } from "../../models/event-type";
 import { IEvent } from "../../models/IEvent";
 import { ISelectedUserGroup } from "../../models/ISelectedUserGroup";
 import { ICreateEventState } from "../../components/create-event/create-event-wrapper";
+import moment from "moment";
 
 export default class TestData {
   static dummyText = (length: number) => {
