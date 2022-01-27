@@ -4,28 +4,29 @@
 
 namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 {
+    using System.Collections.Generic;
+    using System.Security.Claims;
+    using System.Security.Principal;
+    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Graph;
     using Microsoft.Teams.Apps.EmployeeTraining.Controllers;
     using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
+    using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
-    using System.Collections.Generic;
-    using System.Security.Claims;
-    using System.Security.Principal;
-    using System.Threading.Tasks;
 
     [TestClass]
     public class UsersControllerTest
     {
-        UsersController userController;
-        Mock<IUserGraphHelper> userGraphHelper;
         Mock<IGroupGraphHelper> groupGraphHelper;
         TelemetryClient telemetryClient;
+        UsersController userController;
+        Mock<IUserGraphHelper> userGraphHelper;
 
         [TestInitialize]
         public void UsersControllerTestSetup()
@@ -43,10 +44,10 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             var httpContext = MakeFakeContext();
             userController.ControllerContext = new ControllerContext
             {
-                HttpContext = httpContext
+                HttpContext = httpContext,
             };
         }
-        
+
         [TestMethod]
         public async Task SearchUsersrAndGroups_ReturnsOkResult()
         {
@@ -62,14 +63,14 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task GetUsersProfiles_ReturnsOkResult()
         {
             var userIds = new List<string> { "a", "b", "c" };
             this.userGraphHelper
                 .Setup(g => g.GetUsersAsync(It.IsAny<List<string>>()))
-                .Returns(Task.FromResult(EventWorkflowHelperData.graphUsers as IEnumerable<Graph.User>));
+                .Returns(Task.FromResult(EventWorkflowHelperData.graphUsers as IEnumerable<User>));
 
             var Result = (ObjectResult)await this.userController.GetUsersProfiles(userIds);
 

@@ -4,12 +4,12 @@
 
 /** Contains the values which shows status for an activity */
 export enum ActivityStatus {
-    /** Indicates no activity */
-    None,
+  /** Indicates no activity */
+  None,
 
-    /** Indicates that the activity completed successfully */
-    Success,
+  /** Indicates that the activity completed successfully */
+  Success,
 
-    /** Indicates that the activity failed to execute */
-    Error
+  /** Indicates that the activity failed to execute */
+  Error,
 }

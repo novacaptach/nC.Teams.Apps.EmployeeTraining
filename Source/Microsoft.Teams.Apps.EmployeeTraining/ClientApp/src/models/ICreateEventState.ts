@@ -8,15 +8,15 @@ import { ISelectedDropdownItem } from "./ISelectedDropdownItem";
 import { IConstantDropdownItem } from "../constants/resources";
 
 export interface ICreateEventState {
-    currentEventStep: number,
-    eventDetails: IEvent,
-    selectedCategory: ISelectedDropdownItem | undefined,
-    selectedEvent: ISelectedDropdownItem | undefined,
-    selectedAudience: ISelectedDropdownItem | undefined,
-    selectedUserGroups: Array<ISelectedUserGroup>,
-    categories: Array<IConstantDropdownItem>,
-    isEdit: boolean,
-    isDraft: boolean,
-    isLoading: boolean,
-    displayReadonly: boolean
+  currentEventStep: number;
+  eventDetails: IEvent;
+  selectedCategory: ISelectedDropdownItem | undefined;
+  selectedEvent: ISelectedDropdownItem | undefined;
+  selectedAudience: ISelectedDropdownItem | undefined;
+  selectedUserGroups: Array<ISelectedUserGroup>;
+  categories: Array<IConstantDropdownItem>;
+  isEdit: boolean;
+  isDraft: boolean;
+  isLoading: boolean;
+  displayReadonly: boolean;
 }

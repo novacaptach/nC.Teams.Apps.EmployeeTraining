@@ -2,31 +2,30 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Models
+namespace Microsoft.Teams.Apps.EmployeeTraining.Models.Enums;
+
+/// <summary>
+/// Contains the values for event audience
+/// </summary>
+public enum NotificationType
 {
     /// <summary>
-    /// Contains the values for event audience
+    /// Indicates that the notification type not mentioned
     /// </summary>
-    public enum NotificationType
-    {
-        /// <summary>
-        /// Indicates that the notification type not mentioned
-        /// </summary>
-        None,
+    None,
 
-        /// <summary>
-        /// Indicates that the notification to be sent daily
-        /// </summary>
-        Daily,
+    /// <summary>
+    /// Indicates that the notification to be sent daily
+    /// </summary>
+    Daily,
 
-        /// <summary>
-        /// Indicates that the notification to be sent weekly
-        /// </summary>
-        Weekly,
+    /// <summary>
+    /// Indicates that the notification to be sent weekly
+    /// </summary>
+    Weekly,
 
-        /// <summary>
-        /// Indicates that the notification to be sent manually from manage events tab
-        /// </summary>
-        Manual,
-    }
+    /// <summary>
+    /// Indicates that the notification to be sent manually from manage events tab
+    /// </summary>
+    Manual,
 }

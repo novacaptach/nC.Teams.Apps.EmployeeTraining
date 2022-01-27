@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BaseFiles", "BaseFiles", "{011EE73B-3083-4353-8331-1CFD3DA70B22}"
 	ProjectSection(SolutionItems) = preProject
 		..\.deployment = ..\.deployment
+		.editorconfig = .editorconfig
 		..\.gitignore = ..\.gitignore
 		..\CODE_OF_CONDUCT.md = ..\CODE_OF_CONDUCT.md
 		..\deploy.cmd = ..\deploy.cmd
@@ -17,6 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BaseFiles", "BaseFiles", "{
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\SECURITY.md = ..\SECURITY.md
+		stylecop.json = stylecop.json
 		..\SUPPORT.md = ..\SUPPORT.md
 	EndProjectSection
 EndProject

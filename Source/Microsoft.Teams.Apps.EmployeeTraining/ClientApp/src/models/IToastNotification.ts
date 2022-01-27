@@ -5,7 +5,7 @@
 import { ActivityStatus } from "./activity-status";
 
 export interface IToastNotification {
-    id: number
-    message: string,
-    type: ActivityStatus
+  id: number;
+  message: string;
+  type: ActivityStatus;
 }

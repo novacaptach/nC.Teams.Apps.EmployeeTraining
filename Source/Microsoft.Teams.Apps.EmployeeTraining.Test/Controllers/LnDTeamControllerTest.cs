@@ -4,6 +4,10 @@
 
 namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 {
+    using System.Collections.Generic;
+    using System.Security.Claims;
+    using System.Security.Principal;
+    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
@@ -12,14 +16,10 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
     using Microsoft.Extensions.Logging;
     using Microsoft.Teams.Apps.EmployeeTraining.Controllers;
     using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
+    using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
-    using System.Collections.Generic;
-    using System.Security.Claims;
-    using System.Security.Principal;
-    using System.Threading.Tasks;
-    
+
     [TestClass]
     public class LnDTeamControllerTest
     {
@@ -42,7 +42,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             var httpContext = MakeFakeContext();
             lnDTeamController.ControllerContext = new ControllerContext
             {
-                HttpContext = httpContext
+                HttpContext = httpContext,
             };
         }
 
@@ -95,6 +95,5 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             identity.Setup(id => id.Name).Returns("test");
             return context.Object;
         }
-
     }
 }

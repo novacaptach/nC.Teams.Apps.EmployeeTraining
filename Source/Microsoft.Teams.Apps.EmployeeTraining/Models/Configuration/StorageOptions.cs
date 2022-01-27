@@ -2,16 +2,15 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Common.Models
+namespace Microsoft.Teams.Apps.EmployeeTraining.Models.Configuration;
+
+/// <summary>
+/// Provides application setting related to Azure Table Storage.
+/// </summary>
+public class StorageOptions
 {
     /// <summary>
-    /// Provides application setting related to Azure Table Storage.
+    /// Gets or sets Azure Table Storage connection string.
     /// </summary>
-    public class StorageOptions
-    {
-        /// <summary>
-        /// Gets or sets Azure Table Storage connection string.
-        /// </summary>
-        public string ConnectionString { get; set; }
-    }
+    public string ConnectionString { get; set; }
 }

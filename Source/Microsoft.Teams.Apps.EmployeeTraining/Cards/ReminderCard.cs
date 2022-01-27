@@ -2,199 +2,205 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Cards
+namespace Microsoft.Teams.Apps.EmployeeTraining.Cards;
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using AdaptiveCards;
+using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Localization;
+using Microsoft.Teams.Apps.EmployeeTraining.Models;
+using Microsoft.Teams.Apps.EmployeeTraining.Models.Enums;
+using Microsoft.Teams.Apps.EmployeeTraining.Resources;
+
+/// <summary>
+/// Holds the method which returns reminder card
+/// </summary>
+public static class ReminderCard
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
-    using AdaptiveCards;
-    using Microsoft.Bot.Schema;
-    using Microsoft.Extensions.Localization;
-    using Microsoft.Teams.Apps.EmployeeTraining;
-    using Microsoft.Teams.Apps.EmployeeTraining.Models;
-
     /// <summary>
-    /// Holds the method which returns reminder card
+    /// Gets the reminder card with event details
     /// </summary>
-    public static class ReminderCard
+    /// <param name="events">The list of events</param>
+    /// <param name="localizer">The localizer for localizing content</param>
+    /// <param name="applicationManifestId">Unique manifest Id used for side-loading app</param>
+    /// <param name="notificationType">The type of notification being sent</param>
+    /// <returns>If event details provided, then returns reminder card. Else returns empty card.</returns>
+    public static Attachment GetCard(
+        IEnumerable<EventEntity> events,
+        IStringLocalizer<Strings> localizer,
+        string applicationManifestId,
+        NotificationType notificationType = NotificationType.Manual)
     {
-        /// <summary>
-        /// Gets the reminder card with event details
-        /// </summary>
-        /// <param name="events">The list of events</param>
-        /// <param name="localizer">The localizer for localizing content</param>
-        /// <param name="applicationManifestId">Unique manifest Id used for side-loading app</param>
-        /// <param name="notificationType">The type of notification being sent</param>
-        /// <returns>If event details provided, then returns reminder card. Else returns empty card.</returns>
-        public static Attachment GetCard(IEnumerable<EventEntity> events, IStringLocalizer<Strings> localizer, string applicationManifestId, NotificationType notificationType = NotificationType.Manual)
+        var textAlignment = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? AdaptiveHorizontalAlignment.Right : AdaptiveHorizontalAlignment.Left;
+        if ((events == null) || !events.Any())
         {
-            var textAlignment = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? AdaptiveHorizontalAlignment.Right : AdaptiveHorizontalAlignment.Left;
-            if (events == null || !events.Any())
+            return new Attachment();
+        }
+
+        var cardTitle = string.Empty;
+
+        switch (notificationType)
+        {
+            case NotificationType.Daily:
+                cardTitle = localizer.GetString(name: "DailyReminderCardTitle");
+                break;
+
+            case NotificationType.Weekly:
+                cardTitle = localizer.GetString(name: "WeeklyReminderCardTitle");
+                break;
+
+            default:
+                cardTitle = localizer.GetString(name: "ReminderCardTitle");
+                break;
+        }
+
+        var cardBody = new List<AdaptiveElement>
+        {
+            new AdaptiveColumnSet
             {
-                return new Attachment();
-            }
-
-            var cardTitle = string.Empty;
-
-            switch (notificationType)
-            {
-                case NotificationType.Daily:
-                    cardTitle = localizer.GetString("DailyReminderCardTitle");
-                    break;
-
-                case NotificationType.Weekly:
-                    cardTitle = localizer.GetString("WeeklyReminderCardTitle");
-                    break;
-
-                default:
-                    cardTitle = localizer.GetString("ReminderCardTitle");
-                    break;
-            }
-
-            var cardBody = new List<AdaptiveElement>
-            {
-                new AdaptiveColumnSet
+                Columns = new List<AdaptiveColumn>
                 {
-                    Columns = new List<AdaptiveColumn>
+                    new ()
                     {
-                        new AdaptiveColumn
+                        Items = new List<AdaptiveElement>
                         {
-                            Items = new List<AdaptiveElement>
+                            new AdaptiveTextBlock
                             {
-                                new AdaptiveTextBlock
-                                {
-                                    Text = cardTitle,
-                                    Wrap = true,
-                                    Size = AdaptiveTextSize.Large,
-                                    Weight = AdaptiveTextWeight.Bolder,
-                                    HorizontalAlignment = textAlignment,
-                                },
+                                Text = cardTitle,
+                                Wrap = true,
+                                Size = AdaptiveTextSize.Large,
+                                Weight = AdaptiveTextWeight.Bolder,
+                                HorizontalAlignment = textAlignment,
                             },
                         },
                     },
                 },
-            };
+            },
+        };
 
-            cardBody.AddRange(GetReminderCardElements(events, localizer).Select(cardElement => cardElement));
+        cardBody.AddRange(collection: GetReminderCardElements(events: events, localizer: localizer).Select(cardElement => cardElement));
 
-            AdaptiveCard reminderCard = new AdaptiveCard(new AdaptiveSchemaVersion(1, 2))
-            {
-                Body = cardBody,
-                Actions = new List<AdaptiveAction>
-                {
-                    new AdaptiveOpenUrlAction
-                    {
-                        Title = $"{localizer.GetString("ReminderCardRegisteredEventButton")}",
-                        Url = new Uri($"https://teams.microsoft.com/l/entity/{applicationManifestId}/my-events"), // Open My events tab (deep link).
-                    },
-                },
-            };
-
-            return new Attachment
-            {
-                ContentType = AdaptiveCard.ContentType,
-                Content = reminderCard,
-            };
-        }
-
-        /// <summary>
-        /// Gets reminder card elements
-        /// </summary>
-        /// <param name="events">The list of events</param>
-        /// <param name="localizer">The localizer for localizing content</param>
-        /// <returns>Returns reminder card elements</returns>
-        private static List<AdaptiveElement> GetReminderCardElements(IEnumerable<EventEntity> events, IStringLocalizer<Strings> localizer)
+        var reminderCard = new AdaptiveCard(schemaVersion: new AdaptiveSchemaVersion(major: 1, minor: 2))
         {
-            var textAlignment = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? AdaptiveHorizontalAlignment.Right : AdaptiveHorizontalAlignment.Left;
-            List<AdaptiveElement> cardElements = new List<AdaptiveElement>();
-
-            foreach (var eventDetails in events)
+            Body = cardBody,
+            Actions = new List<AdaptiveAction>
             {
-                AdaptiveColumnSet adaptiveColumnSet = new AdaptiveColumnSet
+                new AdaptiveOpenUrlAction
                 {
-                    Columns = new List<AdaptiveColumn>
+                    Title = $"{localizer.GetString(name: "ReminderCardRegisteredEventButton")}",
+                    Url = new Uri(uriString: $"https://teams.microsoft.com/l/entity/{applicationManifestId}/my-events"), // Open My events tab (deep link).
+                },
+            },
+        };
+
+        return new Attachment
+        {
+            ContentType = AdaptiveCard.ContentType,
+            Content = reminderCard,
+        };
+    }
+
+    /// <summary>
+    /// Gets reminder card elements
+    /// </summary>
+    /// <param name="events">The list of events</param>
+    /// <param name="localizer">The localizer for localizing content</param>
+    /// <returns>Returns reminder card elements</returns>
+    private static List<AdaptiveElement> GetReminderCardElements(
+        IEnumerable<EventEntity> events,
+        IStringLocalizer<Strings> localizer)
+    {
+        var textAlignment = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? AdaptiveHorizontalAlignment.Right : AdaptiveHorizontalAlignment.Left;
+        var cardElements = new List<AdaptiveElement>();
+
+        foreach (var eventDetails in events)
+        {
+            var adaptiveColumnSet = new AdaptiveColumnSet
+            {
+                Columns = new List<AdaptiveColumn>
+                {
+                    new ()
                     {
-                        new AdaptiveColumn
-                        {
-                            Width = "45px",
-                            PixelMinHeight = 45,
-                            Items = !string.IsNullOrEmpty(eventDetails.Photo) ? new List<AdaptiveElement>
+                        Width = "45px",
+                        PixelMinHeight = 45,
+                        Items = !string.IsNullOrEmpty(value: eventDetails.Photo)
+                            ? new List<AdaptiveElement>
                             {
                                 new AdaptiveImage
                                 {
-                                    Url = new Uri(eventDetails.Photo),
+                                    Url = new Uri(uriString: eventDetails.Photo),
                                     HorizontalAlignment = AdaptiveHorizontalAlignment.Left,
                                     PixelHeight = 45,
                                     PixelWidth = 45,
                                 },
                             }
-                            :
-                            new List<AdaptiveElement>(),
-                        },
-                        new AdaptiveColumn
+                            : new List<AdaptiveElement>(),
+                    },
+                    new ()
+                    {
+                        Items = new List<AdaptiveElement>
                         {
-                            Items = new List<AdaptiveElement>
+                            new AdaptiveTextBlock
                             {
-                                new AdaptiveTextBlock
+                                Text = eventDetails.Name,
+                                Weight = AdaptiveTextWeight.Bolder,
+                                Size = AdaptiveTextSize.Small,
+                                HorizontalAlignment = textAlignment,
+                            },
+                            new AdaptiveColumnSet
+                            {
+                                Spacing = AdaptiveSpacing.None,
+                                Columns = new List<AdaptiveColumn>
                                 {
-                                    Text = eventDetails.Name,
-                                    Weight = AdaptiveTextWeight.Bolder,
-                                    Size = AdaptiveTextSize.Small,
-                                    HorizontalAlignment = textAlignment,
-                                },
-                                new AdaptiveColumnSet
-                                {
-                                    Spacing = AdaptiveSpacing.None,
-                                    Columns = new List<AdaptiveColumn>
+                                    new ()
                                     {
-                                        new AdaptiveColumn
+                                        Width = AdaptiveColumnWidth.Auto,
+                                        Items = new List<AdaptiveElement>
                                         {
-                                            Width = AdaptiveColumnWidth.Auto,
-                                            Items = new List<AdaptiveElement>
+                                            new AdaptiveTextBlock
                                             {
-                                                new AdaptiveTextBlock
-                                                {
-                                                    Text = eventDetails.CategoryName,
-                                                    Wrap = true,
-                                                    Color = AdaptiveTextColor.Warning,
-                                                    Size = AdaptiveTextSize.Small,
-                                                    HorizontalAlignment = textAlignment,
-                                                },
+                                                Text = eventDetails.CategoryName,
+                                                Wrap = true,
+                                                Color = AdaptiveTextColor.Warning,
+                                                Size = AdaptiveTextSize.Small,
+                                                HorizontalAlignment = textAlignment,
                                             },
                                         },
-                                        new AdaptiveColumn
+                                    },
+                                    new ()
+                                    {
+                                        Items = new List<AdaptiveElement>
                                         {
-                                            Items = new List<AdaptiveElement>
+                                            new AdaptiveTextBlock
                                             {
-                                                new AdaptiveTextBlock
-                                                {
-                                                    Text = "| " + (eventDetails.Type == (int)EventType.InPerson ? eventDetails.Venue : localizer.GetString("TeamsMeetingText")),
-                                                    Wrap = true,
-                                                    HorizontalAlignment = textAlignment,
-                                                    Size = AdaptiveTextSize.Small,
-                                                },
+                                                Text = "| " + (eventDetails.Type == (int)EventType.InPerson ? eventDetails.Venue : localizer.GetString(name: "TeamsMeetingText")),
+                                                Wrap = true,
+                                                HorizontalAlignment = textAlignment,
+                                                Size = AdaptiveTextSize.Small,
                                             },
                                         },
                                     },
                                 },
-                                new AdaptiveColumnSet
+                            },
+                            new AdaptiveColumnSet
+                            {
+                                Spacing = AdaptiveSpacing.None,
+                                Columns = new List<AdaptiveColumn>
                                 {
-                                    Spacing = AdaptiveSpacing.None,
-                                    Columns = new List<AdaptiveColumn>
+                                    new ()
                                     {
-                                        new AdaptiveColumn
+                                        Width = AdaptiveColumnWidth.Auto,
+                                        Items = new List<AdaptiveElement>
                                         {
-                                            Width = AdaptiveColumnWidth.Auto,
-                                            Items = new List<AdaptiveElement>
+                                            new AdaptiveTextBlock
                                             {
-                                                new AdaptiveTextBlock
-                                                {
-                                                    Text = string.Format(CultureInfo.CurrentCulture, "{0} {1}-{2}", "{{DATE(" + eventDetails.StartDate.Value.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'", CultureInfo.InvariantCulture) + ", SHORT)}}", "{{TIME(" + eventDetails.StartTime.Value.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture) + ")}}", "{{TIME(" + eventDetails.EndTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture) + ")}}"),
-                                                    Wrap = true,
-                                                    Size = AdaptiveTextSize.Small,
-                                                    HorizontalAlignment = textAlignment,
-                                                },
+                                                Text = string.Format(provider: CultureInfo.CurrentCulture, format: "{0} {1}-{2}", arg0: "{{DATE(" + eventDetails.StartDate.Value.ToString(format: "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'", provider: CultureInfo.InvariantCulture) + ", SHORT)}}", arg1: "{{TIME(" + eventDetails.StartTime.Value.ToString(format: "yyyy-MM-dd'T'HH:mm:ss'Z'", provider: CultureInfo.InvariantCulture) + ")}}", arg2: "{{TIME(" + eventDetails.EndTime.ToString(format: "yyyy-MM-dd'T'HH:mm:ss'Z'", provider: CultureInfo.InvariantCulture) + ")}}"),
+                                                Wrap = true,
+                                                Size = AdaptiveTextSize.Small,
+                                                HorizontalAlignment = textAlignment,
                                             },
                                         },
                                     },
@@ -202,12 +208,12 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Cards
                             },
                         },
                     },
-                };
+                },
+            };
 
-                cardElements.Add(adaptiveColumnSet);
-            }
-
-            return cardElements;
+            cardElements.Add(item: adaptiveColumnSet);
         }
+
+        return cardElements;
     }
 }

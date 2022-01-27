@@ -4,6 +4,10 @@
 
 namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 {
+    using System.Collections.Generic;
+    using System.Security.Claims;
+    using System.Security.Principal;
+    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
@@ -13,17 +17,14 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
     using Microsoft.Teams.Apps.EmployeeTraining.Controllers;
     using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
     using Microsoft.Teams.Apps.EmployeeTraining.Models;
-    using Microsoft.Teams.Apps.EmployeeTraining.Services;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
+    using Microsoft.Teams.Apps.EmployeeTraining.Models.Enums;
+    using Microsoft.Teams.Apps.EmployeeTraining.Resources;
+    using Microsoft.Teams.Apps.EmployeeTraining.Services.SearchService;
+    using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-    using System;
-    using System.Collections.Generic;
-    using System.Security.Claims;
-    using System.Security.Principal;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// Exposes APIs related to event operations.
@@ -31,16 +32,11 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
     [TestClass]
     public class EventWorkflowControllerTest
     {
+        Mock<ICategoryHelper> categoryHelper;
         EventWorkflowController eventWorkflowController;
         Mock<IEventWorkflowHelper> eventWorkflowHelper;
-        Mock<ICategoryHelper> categoryHelper;
         Mock<ITeamEventSearchService> teamEventSearchService;
         TelemetryClient telemetryClient;
-
-        private class ValidationMessage 
-        {
-           public List<string> errors = new List<string>();
-        };
 
         [TestInitialize]
         public void EventWorkflowControllerTestSetup()
@@ -63,7 +59,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             var httpContext = MakeFakeContext();
             eventWorkflowController.ControllerContext = new ControllerContext
             {
-                HttpContext = httpContext
+                HttpContext = httpContext,
             };
         }
 
@@ -76,9 +72,8 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             var Result = (ObjectResult)await this.eventWorkflowController.CreateDraftAsync(EventWorkflowHelperData.eventEntity, EventWorkflowHelperData.eventEntity.TeamId);
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
-
         }
-        
+
         [TestMethod]
         public async Task UpdateDraftAsync_ReturnsOkResult()
         {
@@ -90,7 +85,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             var Result = (ObjectResult)await this.eventWorkflowController.UpdateDraftAsync(EventWorkflowHelperData.eventEntity, EventWorkflowHelperData.eventEntity.TeamId);
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task CreateEventAsync_ReturnsOkResult()
         {
@@ -113,13 +108,13 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             var Result = (ObjectResult)await this.eventWorkflowController.CreateEventAsync(EventWorkflowHelperData.eventEntity, EventWorkflowHelperData.validEventEntity.TeamId);
             var validationMessages = JsonConvert.DeserializeObject<ValidationMessage>(JObject.FromObject(Result.Value).ToString());
-            
+
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status400BadRequest);
-            Assert.AreEqual(validationMessages.errors.Contains("Event start date must be future date."),true);
-            Assert.AreEqual(validationMessages.errors.Contains("Invalid event type value. Event type should be in-between 1 to 3"),true);
-            Assert.AreEqual(validationMessages.errors.Contains("Invalid Audience value. It should be either 1 or 2"),true);
+            Assert.AreEqual(validationMessages.errors.Contains("Event start date must be future date."), true);
+            Assert.AreEqual(validationMessages.errors.Contains("Invalid event type value. Event type should be in-between 1 to 3"), true);
+            Assert.AreEqual(validationMessages.errors.Contains("Invalid Audience value. It should be either 1 or 2"), true);
         }
-        
+
         [TestMethod]
         public async Task UpdateAsync_InvalidEntiiy_ReturnsBadRequest()
         {
@@ -130,12 +125,12 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             var Result = (ObjectResult)await this.eventWorkflowController.UpdateAsync(EventWorkflowHelperData.eventEntity, EventWorkflowHelperData.validEventEntity.TeamId);
             var validationMessages = JsonConvert.DeserializeObject<ValidationMessage>(JObject.FromObject(Result.Value).ToString());
-            
+
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status400BadRequest);
-            Assert.AreEqual(validationMessages.errors.Contains("Invalid event type value. Event type should be in-between 1 to 3"),true);
-            Assert.AreEqual(validationMessages.errors.Contains("Invalid Audience value. It should be either 1 or 2"),true);
+            Assert.AreEqual(validationMessages.errors.Contains("Invalid event type value. Event type should be in-between 1 to 3"), true);
+            Assert.AreEqual(validationMessages.errors.Contains("Invalid Audience value. It should be either 1 or 2"), true);
         }
-        
+
         [TestMethod]
         public async Task UpdateAsync_ReturnsOkResult()
         {
@@ -217,5 +212,10 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             identity.Setup(id => id.Name).Returns("test");
             return context.Object;
         }
+
+        private class ValidationMessage
+        {
+            public List<string> errors = new List<string>();
+        };
     }
 }

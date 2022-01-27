@@ -2,15 +2,15 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-import baseAxios, { AxiosRequestConfig } from "axios";
+import baseAxios from "axios";
 
 /**
  * Gets the API request configuration parameters
  * @param params The request parameters
  */
 export const getAPIRequestConfigParams = (params: any) => {
-    let config: AxiosRequestConfig = baseAxios.defaults;
-    config.params = params;
+  const config = baseAxios.defaults;
+  config.params = params;
 
-    return config;
-}
+  return config;
+};

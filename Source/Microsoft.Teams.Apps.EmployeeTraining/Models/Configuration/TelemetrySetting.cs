@@ -2,16 +2,15 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Models
+namespace Microsoft.Teams.Apps.EmployeeTraining.Models.Configuration;
+
+/// <summary>
+/// A class which helps to provide Telemetry settings for application.
+/// </summary>
+public class TelemetrySetting
 {
     /// <summary>
-    /// A class which helps to provide Telemetry settings for application.
+    /// Gets or sets Application Insights instrumentation key.
     /// </summary>
-    public class TelemetrySetting
-    {
-        /// <summary>
-        /// Gets or sets Application Insights instrumentation key.
-        /// </summary>
-        public string InstrumentationKey { get; set; }
-    }
+    public string InstrumentationKey { get; set; }
 }

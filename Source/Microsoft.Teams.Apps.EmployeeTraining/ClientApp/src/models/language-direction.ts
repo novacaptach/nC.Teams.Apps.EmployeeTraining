@@ -3,12 +3,12 @@
 // </copyright>
 
 export enum LanguageDirection {
-    /** Indicates that the language direction is right-to-left*/
-    Rtl = "rtl",
+  /** Indicates that the language direction is right-to-left*/
+  Rtl = "rtl",
 
-    /** Indicates that the language direction is left-to-right*/
-    Ltr = "ltr",
+  /** Indicates that the language direction is left-to-right*/
+  Ltr = "ltr",
 
-    /** Indicates that the language direction is auto*/
-    Auto = "auto",
+  /** Indicates that the language direction is auto*/
+  Auto = "auto",
 }

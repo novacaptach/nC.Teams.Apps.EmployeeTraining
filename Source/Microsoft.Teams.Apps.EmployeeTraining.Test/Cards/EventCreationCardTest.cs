@@ -2,33 +2,32 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Cards
+namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Cards;
+
+using AdaptiveCards;
+using Microsoft.Extensions.Localization;
+using Microsoft.Teams.Apps.EmployeeTraining.Cards;
+using Microsoft.Teams.Apps.EmployeeTraining.Resources;
+using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+
+[TestClass]
+public class EventCreationCardTest
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Moq;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
-    using Microsoft.Teams.Apps.EmployeeTraining.Cards;
-    using Microsoft.Extensions.Localization;
-    using AdaptiveCards;
+    private Mock<IStringLocalizer<Strings>> localizer;
 
-    [TestClass]
-    public class EventCreationCardTest
+    [TestInitialize]
+    public void EventCreationCardTestSetup()
     {
-        Mock<IStringLocalizer<Strings>> localizer;
+        this.localizer = new Mock<IStringLocalizer<Strings>>();
+    }
 
-        [TestInitialize]
-        public void EventCreationCardTestSetup()
-        {
-            localizer = new Mock<IStringLocalizer<Strings>>();
-        }
+    [TestMethod]
+    public void GetEventCreationCardForTeam()
+    {
+        var Results = EventDetailsCard.GetEventCreationCardForTeam(applicationBasePath: "https://www.example.com", localizer: this.localizer.Object, eventEntity: EventWorkflowHelperData.validEventEntity, createdByName: "random");
 
-        [TestMethod]
-        public void GetEventCreationCardForTeam()
-        {
-            var Results = EventDetailsCard.GetEventCreationCardForTeam("https://www.example.com", localizer.Object, EventWorkflowHelperData.validEventEntity, "random");
-
-            Assert.AreEqual(Results.ContentType, AdaptiveCard.ContentType);
-        }
-
+        Assert.AreEqual(expected: Results.ContentType, actual: AdaptiveCard.ContentType);
     }
 }

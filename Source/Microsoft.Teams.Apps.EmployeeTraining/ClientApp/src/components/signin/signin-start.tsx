@@ -4,24 +4,28 @@
 
 import React, { useEffect } from "react";
 import * as microsoftTeams from "@microsoft/teams-js";
-import { getAuthenticationConsentMetadata } from '../../api/authentication-metadata-api';
+import { getAuthenticationConsentMetadata } from "../../api/authentication-metadata-api";
 
 const SignInSimpleStart: React.FunctionComponent = () => {
-    useEffect(() => {
-        microsoftTeams.initialize();
-        microsoftTeams.getContext((context: microsoftTeams.Context) => {
-            const windowLocationOriginDomain = window.location.origin.replace("https://", "");
-            const login_hint = context.upn ? context.upn : "";
+  useEffect(() => {
+    microsoftTeams.initialize();
+    microsoftTeams.getContext((context: microsoftTeams.Context) => {
+      const windowLocationOriginDomain = window.location.origin.replace(
+        "https://",
+        ""
+      );
+      const login_hint = context.upn ? context.upn : "";
 
-            getAuthenticationConsentMetadata(windowLocationOriginDomain, login_hint).then((result: any) => {
-                window.location.assign(result.data);
-            });
-        });
+      getAuthenticationConsentMetadata(
+        windowLocationOriginDomain,
+        login_hint
+      ).then((result: any) => {
+        window.location.assign(result.data);
+      });
     });
+  });
 
-    return (
-        <></>
-    );
+  return <></>;
 };
 
 export default SignInSimpleStart;

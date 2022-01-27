@@ -13,8 +13,8 @@ const baseURL = window.location.origin + "/api";
  * @param teamId The LnD team ID
  */
 export const getEventAsync = async (eventId: string, teamId: string) => {
-    return Promise.resolve({
-        data: TestData.testEventDetails,
-        status: ResponseStatus.OK
-    });
-}
+  return Promise.resolve({
+    data: TestData.testEventDetails,
+    status: ResponseStatus.OK,
+  });
+};

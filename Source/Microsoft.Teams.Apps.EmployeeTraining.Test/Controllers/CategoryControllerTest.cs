@@ -4,6 +4,11 @@
 
 namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Security.Claims;
+    using System.Security.Principal;
+    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
@@ -13,15 +18,10 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
     using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
     using Microsoft.Teams.Apps.EmployeeTraining.Models;
     using Microsoft.Teams.Apps.EmployeeTraining.Repositories;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.Providers;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
+    using Microsoft.Teams.Apps.EmployeeTraining.Test.Providers;
+    using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Security.Claims;
-    using System.Security.Principal;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// The controller handles the data requests related to categories.
@@ -53,7 +53,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             var httpContext = MakeFakeContext();
             categoryController.ControllerContext = new ControllerContext
             {
-                HttpContext = httpContext
+                HttpContext = httpContext,
             };
         }
 
@@ -67,52 +67,52 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             this.categoryHelper
                 .Setup(c => c.CheckIfCategoryIsInUseAsync(It.IsAny<IEnumerable<Category>>()))
                 .Returns(Task.FromResult(true));
-            
+
             var Result = (ObjectResult)await this.categoryController.GetCategoriesAsync();
-            
+
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task GetCategoriesForEventsAsync_ReturnsOkResult()
         {
             this.categoryStorageProvider
                 .Setup(c => c.GetCategoriesAsync())
                 .Returns(this.categoryStorageProviderFake.GetCategoriesAsync());
-            
+
             var Result = (ObjectResult)await this.categoryController.GetCategoriesToCreateEventAsync();
-            
+
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task CreateCategoryAsync_ReturnsOkResult()
         {
             this.categoryStorageProvider
                 .Setup(c => c.UpsertCategoryAsync(It.IsAny<Category>()))
                 .Returns(this.categoryStorageProviderFake.UpsertCategoryAsync(EventWorkflowHelperData.category));
-            
+
             var Result = (ObjectResult)await this.categoryController.CreateCategoryAsync(EventWorkflowHelperData.category, EventWorkflowHelperData.validEventEntity.TeamId);
-            
+
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task UpdateCategoryAsync_ReturnsOkResult()
         {
             this.categoryStorageProvider
                 .Setup(c => c.GetCategoryAsync(It.IsAny<string>()))
                 .Returns(this.categoryStorageProviderFake.GetCategoryAsync(EventWorkflowHelperData.category.CategoryId));
-            
+
             this.categoryStorageProvider
                 .Setup(c => c.UpsertCategoryAsync(It.IsAny<Category>()))
                 .Returns(this.categoryStorageProviderFake.UpsertCategoryAsync(EventWorkflowHelperData.category));
-            
+
             var Result = (ObjectResult)await this.categoryController.UpdateCategoryAsync(EventWorkflowHelperData.category, EventWorkflowHelperData.validEventEntity.TeamId);
-            
+
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task DeleteCategoriesAsync_ReturnsOkResult()
         {
@@ -122,13 +122,13 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             this.categoryStorageProvider
                 .Setup(c => c.GetCategoriesByIdsAsync(It.IsAny<string[]>()))
                 .Returns(this.categoryStorageProviderFake.GetCategoriesByIdsAsync(eventCategoryIds));
-            
+
             this.categoryStorageProvider
                 .Setup(c => c.DeleteCategoriesInBatchAsync(It.IsAny<IEnumerable<Category>>()))
                 .Returns(this.categoryStorageProviderFake.DeleteCategoriesInBatchAsync(EventWorkflowHelperData.categoryList));
-            
-            var Result = (ObjectResult)await this.categoryController.DeleteCategoriesAsync(EventWorkflowHelperData.validEventEntity.TeamId,EventWorkflowHelperData.category.CategoryId);
-            
+
+            var Result = (ObjectResult)await this.categoryController.DeleteCategoriesAsync(EventWorkflowHelperData.validEventEntity.TeamId, EventWorkflowHelperData.category.CategoryId);
+
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
 

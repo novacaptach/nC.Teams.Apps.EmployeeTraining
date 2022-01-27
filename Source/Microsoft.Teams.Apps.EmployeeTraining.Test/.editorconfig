@@ -1,0 +1,13 @@
+[*.cs]
+
+# SA1600	Elements should be documented
+dotnet_diagnostic.SA1600.severity = none
+
+# Missing XML comment for publicly visible type or member 'xyz'
+dotnet_diagnostic.CS1591.severity = none
+
+# SA1507: Code should not contain multiple blank lines in a row
+dotnet_diagnostic.SA1507.severity = error
+
+# CA2007: Do not directly await a Task without calling ConfigureAwait
+dotnet_diagnostic.CA2007.severity = none

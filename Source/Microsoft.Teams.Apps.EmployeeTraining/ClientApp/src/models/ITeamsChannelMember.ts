@@ -3,6 +3,6 @@
 // </copyright>
 
 export interface ITeamsChannelMember {
-    aadObjectId: string,
-    name: string
+  aadObjectId: string;
+  name: string;
 }

@@ -14,11 +14,11 @@ const baseURL = window.location.origin + "/api";
  * @param teamId The LnD team ID
  */
 export const uploadEventImage = async (formData: FormData, teamId: string) => {
-    return Promise.resolve({
-        data: true,
-        status: ResponseStatus.OK
-    });
-}
+  return Promise.resolve({
+    data: true,
+    status: ResponseStatus.OK,
+  });
+};
 
 /**
  * Save event as draft
@@ -26,11 +26,11 @@ export const uploadEventImage = async (formData: FormData, teamId: string) => {
  * @param teamId The LnD team ID
  */
 export const saveEventAsDraft = async (event: IEvent, teamId: string) => {
-    return Promise.resolve({
-        data: true,
-        status: ResponseStatus.OK
-    });
-}
+  return Promise.resolve({
+    data: true,
+    status: ResponseStatus.OK,
+  });
+};
 
 /**
  * Update draft event
@@ -38,11 +38,11 @@ export const saveEventAsDraft = async (event: IEvent, teamId: string) => {
  * @param teamId The LnD team ID
  */
 export const updateEventAsDraft = async (event: IEvent, teamId: string) => {
-    return Promise.resolve({
-        data: true,
-        status: ResponseStatus.OK
-    });
-}
+  return Promise.resolve({
+    data: true,
+    status: ResponseStatus.OK,
+  });
+};
 
 /**
  * Create event and add to calendar
@@ -50,11 +50,11 @@ export const updateEventAsDraft = async (event: IEvent, teamId: string) => {
  * @param teamId The LnD team ID
  */
 export const createNewEvent = async (event: IEvent, teamId: string) => {
-    return Promise.resolve({
-        data: true,
-        status: ResponseStatus.OK
-    });
-}
+  return Promise.resolve({
+    data: true,
+    status: ResponseStatus.OK,
+  });
+};
 
 /**
  * Update event details
@@ -62,36 +62,66 @@ export const createNewEvent = async (event: IEvent, teamId: string) => {
  * @param teamId The LnD team ID
  */
 export const updateEvent = async (event: IEvent, teamId: string) => {
-    return Promise.resolve({
-        data: true,
-        status: ResponseStatus.OK
-    });
-}
+  return Promise.resolve({
+    data: true,
+    status: ResponseStatus.OK,
+  });
+};
 
 /**
  * Gets event categories
  * @param teamId The LnD team ID
  */
 export const getEventCategoriesAsync = async () => {
-    let categories: Array<ICategory> = [
-        { categoryId: "category1", description: "description1", isInUse: false, isSelected: false, name: "categoryname1", createdBy: "test", createdOn: new Date(), updatedBy: "test", updatedOn: new Date() },
-        { categoryId: "category2", description: "description2", isInUse: false, isSelected: false, name: "categoryname2", createdBy: "test", createdOn: new Date(), updatedBy: "test", updatedOn: new Date() },
-        { categoryId: "category3", description: "description3", isInUse: true, isSelected: false, name: "categoryname3", createdBy: "test", createdOn: new Date(), updatedBy: "test", updatedOn: new Date() }
-    ]
-    return Promise.resolve({
-        data: categories,
-        status: ResponseStatus.OK
-    });
-}
+  const categories: Array<ICategory> = [
+    {
+      categoryId: "category1",
+      description: "description1",
+      isInUse: false,
+      isSelected: false,
+      name: "categoryname1",
+      createdBy: "test",
+      createdOn: new Date(),
+      updatedBy: "test",
+      updatedOn: new Date(),
+    },
+    {
+      categoryId: "category2",
+      description: "description2",
+      isInUse: false,
+      isSelected: false,
+      name: "categoryname2",
+      createdBy: "test",
+      createdOn: new Date(),
+      updatedBy: "test",
+      updatedOn: new Date(),
+    },
+    {
+      categoryId: "category3",
+      description: "description3",
+      isInUse: true,
+      isSelected: false,
+      name: "categoryname3",
+      createdBy: "test",
+      createdOn: new Date(),
+      updatedBy: "test",
+      updatedOn: new Date(),
+    },
+  ];
+  return Promise.resolve({
+    data: categories,
+    status: ResponseStatus.OK,
+  });
+};
 
 /**
  * Check for event with same name
  * @param eventName User entered event name
  */
 export const searchEventAsync = async (eventName: string) => {
-    console.log("AAAAAAAAAAAA");
-    return Promise.resolve({
-        data: true,
-        status: ResponseStatus.OK
-    });
-}
+  console.log("AAAAAAAAAAAA");
+  return Promise.resolve({
+    data: true,
+    status: ResponseStatus.OK,
+  });
+};

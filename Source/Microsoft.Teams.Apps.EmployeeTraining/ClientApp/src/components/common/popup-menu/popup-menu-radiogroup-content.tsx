@@ -10,33 +10,36 @@ import { LanguageDirection } from "../../../models/language-direction";
 import "./popup-menu.css";
 
 interface IPopupMenuRadiogroupContentProps {
-    content: any,
-    selectedValue: number,
-    onRadiogroupStateChange: (selectedValue: number) => void,
-    dir: LanguageDirection
+  content: any;
+  selectedValue: number;
+  onRadiogroupStateChange: (selectedValue: number) => void;
+  dir: LanguageDirection;
 }
 
-const PopupMenuRadiogroupContent: React.FunctionComponent<IPopupMenuRadiogroupContentProps> = props => {
-
-    return (
-        <Fabric dir={props.dir}>
-            <div className="content-items-wrapper radio-popup-content">
-                <div className="content-items-body">
-                    {   
-                        <Flex gap="gap.small">
-				            <RadioGroup
-					            defaultCheckedValue={props.selectedValue}
-					            vertical
-					            items={props.content.radioGroupItems}
-                                onCheckedValueChange={(event, data: any) => props.onRadiogroupStateChange(data.value)}
-                                data-testid={"radioGroup_items"}
-				            />
-			            </Flex>
-                    }
-                </div>
-            </div>
-        </Fabric>
-    );
-}
+const PopupMenuRadiogroupContent: React.FunctionComponent<IPopupMenuRadiogroupContentProps> = (
+  props
+) => {
+  return (
+    <Fabric dir={props.dir}>
+      <div className="content-items-wrapper radio-popup-content">
+        <div className="content-items-body">
+          {
+            <Flex gap="gap.small">
+              <RadioGroup
+                defaultCheckedValue={props.selectedValue}
+                vertical
+                items={props.content.radioGroupItems}
+                onCheckedValueChange={(event, data: any) =>
+                  props.onRadiogroupStateChange(data.value)
+                }
+                data-testid={"radioGroup_items"}
+              />
+            </Flex>
+          }
+        </div>
+      </div>
+    </Fabric>
+  );
+};
 
 export default React.memo(PopupMenuRadiogroupContent);

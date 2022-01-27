@@ -4,6 +4,10 @@
 
 namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 {
+    using System.IO;
+    using System.Security.Claims;
+    using System.Security.Principal;
+    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
@@ -12,13 +16,9 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
     using Microsoft.Teams.Apps.EmployeeTraining.Controllers;
     using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
     using Microsoft.Teams.Apps.EmployeeTraining.Repositories;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
+    using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
-    using System.IO;
-    using System.Security.Claims;
-    using System.Security.Principal;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// The controller handles the data requests related to categories
@@ -26,9 +26,9 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
     [TestClass]
     public class EventFilesControllerTest
     {
+        Mock<IBlobRepository> blobStoragePrvider;
         EventFilesController eventFilesController;
         Mock<IEventWorkflowHelper> eventWorkFlowHelper;
-        Mock<IBlobRepository> blobStoragePrvider;
         TelemetryClient telemetryClient;
 
         [TestInitialize]
@@ -48,19 +48,18 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             var httpContext = MakeFakeContext();
             eventFilesController.ControllerContext = new ControllerContext
             {
-                HttpContext = httpContext
+                HttpContext = httpContext,
             };
         }
 
         [TestMethod]
         public async Task UploadImageAsync_ReturnsOkResult()
         {
-
             this.blobStoragePrvider
                 .Setup(b => b.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>()))
                 .Returns(Task.FromResult("blobUrl"));
 
-            var Result = (ObjectResult)await this.eventFilesController.UploadImageAsync( EventWorkflowHelperData.fileInfo, EventWorkflowHelperData.validEventEntity.TeamId);
+            var Result = (ObjectResult)await this.eventFilesController.UploadImageAsync(EventWorkflowHelperData.fileInfo, EventWorkflowHelperData.validEventEntity.TeamId);
 
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
@@ -68,7 +67,6 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
         [TestMethod]
         public async Task ExportEventDetailsToCSV_ReturnsOkResult()
         {
-
             this.eventWorkFlowHelper
                 .Setup(e => e.ExportEventDetailsToCSVAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.FromResult(new MemoryStream() as Stream));
@@ -112,6 +110,5 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             identity.Setup(id => id.Name).Returns("test");
             return context.Object;
         }
-
     }
 }

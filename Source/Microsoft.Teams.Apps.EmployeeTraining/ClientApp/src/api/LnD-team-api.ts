@@ -4,12 +4,12 @@
 
 import axios from "./axios-decorator";
 
-let baseAxiosUrl = window.location.origin + '/api';
+let baseAxiosUrl = window.location.origin + "/api";
 
 /**
-* Gets all LnD teams' members
-*/
+ * Gets all LnD teams' members
+ */
 export const getAllLnDTeamMembersAsync = async (): Promise<any> => {
-    let url = `${baseAxiosUrl}/LnDTeam`;
-    return await axios.get(url);
-}
+  const url = `${baseAxiosUrl}/LnDTeam`;
+  return await axios.get(url);
+};

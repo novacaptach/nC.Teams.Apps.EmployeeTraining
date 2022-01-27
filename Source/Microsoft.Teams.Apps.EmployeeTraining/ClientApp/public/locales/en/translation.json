@@ -147,5 +147,5 @@
   "startAndEndTimeError": "Start and end time must be valid",
   "hourPlaceholder": "Hour",
   "minutePlaceholder": "Minute",
-  "signInText":  "Sign in"
+  "signInText": "Sign in"
 }

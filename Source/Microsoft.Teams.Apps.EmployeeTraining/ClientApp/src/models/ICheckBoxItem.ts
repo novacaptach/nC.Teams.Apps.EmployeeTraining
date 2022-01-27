@@ -3,8 +3,8 @@
 // </copyright>
 
 export interface ICheckBoxItem {
-    key: string;
-    title: string;
-    checkboxLabel: JSX.Element,
-    isChecked: boolean;
+  key: string;
+  title: string;
+  checkboxLabel: JSX.Element;
+  isChecked: boolean;
 }

@@ -2,31 +2,30 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Models
+namespace Microsoft.Teams.Apps.EmployeeTraining.Models.Enums;
+
+/// <summary>
+/// Contains the values for event types.
+/// </summary>
+public enum EventType
 {
     /// <summary>
-    /// Contains the values for event types.
+    /// Indicates that the event type is not specified.
     /// </summary>
-    public enum EventType
-    {
-        /// <summary>
-        /// Indicates that the event type is not specified.
-        /// </summary>
-        None,
+    None,
 
-        /// <summary>
-        /// Indicates that the event occurs in physical presence.
-        /// </summary>
-        InPerson = 1,
+    /// <summary>
+    /// Indicates that the event occurs in physical presence.
+    /// </summary>
+    InPerson = 1,
 
-        /// <summary>
-        /// Indicates that the event is a Microsoft Teams meeting.
-        /// </summary>
-        Teams = 2,
+    /// <summary>
+    /// Indicates that the event is a Microsoft Teams meeting.
+    /// </summary>
+    Teams = 2,
 
-        /// <summary>
-        /// Indicates that the event is a Microsoft Teams meeting.
-        /// </summary>
-        LiveEvent = 3,
-    }
+    /// <summary>
+    /// Indicates that the event is a Microsoft Teams meeting.
+    /// </summary>
+    LiveEvent = 3,
 }

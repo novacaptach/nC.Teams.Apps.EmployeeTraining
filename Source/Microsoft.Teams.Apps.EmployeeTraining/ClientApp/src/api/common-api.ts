@@ -3,7 +3,6 @@
 // </copyright>
 
 import axios from "./axios-decorator";
-import { AxiosRequestConfig } from "axios";
 import Constants from "../constants/constants";
 import { getAPIRequestConfigParams } from "../helpers/api-helper";
 
@@ -13,8 +12,11 @@ import { getAPIRequestConfigParams } from "../helpers/api-helper";
  * @param teamId The LnD team ID
  */
 export const getEventAsync = async (eventId: string, teamId: string) => {
-    let url = `${Constants.apiBaseURL}/Event`;
-    let config: AxiosRequestConfig = getAPIRequestConfigParams({ eventId: eventId, teamId: teamId });
+  const url = `${Constants.apiBaseURL}/Event`;
+  const config = getAPIRequestConfigParams({
+    eventId: eventId,
+    teamId: teamId,
+  });
 
-    return await axios.get(url, config);
-}
+  return await axios.get(url, config);
+};

@@ -3,8 +3,8 @@
 // </copyright>
 
 export interface IRadioGroupItem {
-	name: string;
-	key: number;
-	label: string;
-	value: number;
+  name: string;
+  key: number;
+  label: string;
+  value: number;
 }

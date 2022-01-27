@@ -3,7 +3,7 @@
 // </copyright>
 
 export interface IPostType {
-    name: string;
-    id: number;
-    color: string;
+  name: string;
+  id: number;
+  color: string;
 }

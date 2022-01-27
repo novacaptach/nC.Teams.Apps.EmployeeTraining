@@ -3,12 +3,12 @@
 // </copyright>
 
 export enum EventAudience {
-    /** Indicates that the event audience is not specified */
-    None,
+  /** Indicates that the event audience is not specified */
+  None,
 
-    /** Indicates that the event is public */
-    Public = 1,
+  /** Indicates that the event is public */
+  Public = 1,
 
-    /** Indicates that the event is private */
-    Private = 2,
+  /** Indicates that the event is private */
+  Private = 2,
 }

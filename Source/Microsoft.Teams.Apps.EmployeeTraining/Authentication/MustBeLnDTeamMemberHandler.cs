@@ -2,137 +2,140 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Authentication
+namespace Microsoft.Teams.Apps.EmployeeTraining.Authentication;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
+using Microsoft.Teams.Apps.EmployeeTraining.Models.Configuration;
+
+/// <summary>
+/// This authorization handler is created to handle project creator's user policy.
+/// The class implements AuthorizationHandler for handling MustBeLnDTeamMemberUserPolicyRequirement authorization.
+/// </summary>
+public class MustBeLnDTeamMemberHandler : AuthorizationHandler<MustBeLnDTeamMemberRequirement>
 {
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.Caching.Memory;
-    using Microsoft.Extensions.Options;
-    using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
-    using Microsoft.Teams.Apps.EmployeeTraining.Models;
+    /// <summary>
+    /// A set of key/value application configuration properties for Activity settings.
+    /// </summary>
+    private readonly IOptions<BotSettings> botOptions;
 
     /// <summary>
-    /// This authorization handler is created to handle project creator's user policy.
-    /// The class implements AuthorizationHandler for handling MustBeLnDTeamMemberUserPolicyRequirement authorization.
+    /// HTTP context accessor to get HTTP context object.
     /// </summary>
-    public class MustBeLnDTeamMemberHandler : AuthorizationHandler<MustBeLnDTeamMemberRequirement>
+    private readonly IHttpContextAccessor httpContextAccessor;
+
+    /// <summary>
+    /// Cache for storing authorization result.
+    /// </summary>
+    private readonly IMemoryCache memoryCache;
+
+    /// <summary>
+    /// Provides method to fetch bot installation details for team.
+    /// </summary>
+    private readonly ITeamInfoHelper teamsInfoHelper;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MustBeLnDTeamMemberHandler" /> class.
+    /// </summary>
+    /// <param name="memoryCache">Memory cache instance for caching authorization result.</param>
+    /// <param name="botOptions">A set of key/value application configuration properties for activity handler.</param>
+    /// <param name="teamsInfoHelper">Provides method to fetch bot installation details for team.</param>
+    /// <param name="httpContextAccessor">HTTP context accessor to get HTTP context object.</param>
+    public MustBeLnDTeamMemberHandler(
+        IMemoryCache memoryCache,
+        IOptions<BotSettings> botOptions,
+        ITeamInfoHelper teamsInfoHelper,
+        IHttpContextAccessor httpContextAccessor)
     {
-        /// <summary>
-        /// Cache for storing authorization result.
-        /// </summary>
-        private readonly IMemoryCache memoryCache;
+        this.memoryCache = memoryCache;
+        this.httpContextAccessor = httpContextAccessor;
+        this.botOptions = botOptions ?? throw new ArgumentNullException(paramName: nameof(botOptions));
+        this.teamsInfoHelper = teamsInfoHelper;
+    }
 
-        /// <summary>
-        /// A set of key/value application configuration properties for Activity settings.
-        /// </summary>
-        private readonly IOptions<BotSettings> botOptions;
+    /// <summary>
+    /// This method handles the authorization requirement.
+    /// </summary>
+    /// <param name="context">AuthorizationHandlerContext instance.</param>
+    /// <param name="requirement">IAuthorizationRequirement instance.</param>
+    /// <returns>A task that represents the work queued to execute.</returns>
+    protected override async Task HandleRequirementAsync(
+        AuthorizationHandlerContext context,
+        MustBeLnDTeamMemberRequirement requirement)
+    {
+        context = context ?? throw new ArgumentNullException(paramName: nameof(context));
 
-        /// <summary>
-        /// Provides method to fetch bot installation details for team.
-        /// </summary>
-        private readonly ITeamInfoHelper teamsInfoHelper;
+        var teamId = string.Empty;
+        var oidClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
 
-        /// <summary>
-        /// HTTP context accessor to get HTTP context object.
-        /// </summary>
-        private readonly IHttpContextAccessor httpContextAccessor;
+        var claim = context.User.Claims.FirstOrDefault(p => oidClaimType.Equals(value: p.Type, comparisonType: StringComparison.OrdinalIgnoreCase));
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MustBeLnDTeamMemberHandler"/> class.
-        /// </summary>
-        /// <param name="memoryCache">Memory cache instance for caching authorization result.</param>
-        /// <param name="botOptions">A set of key/value application configuration properties for activity handler.</param>
-        /// <param name="teamsInfoHelper">Provides method to fetch bot installation details for team.</param>
-        /// <param name="httpContextAccessor">HTTP context accessor to get HTTP context object.</param>
-        public MustBeLnDTeamMemberHandler(
-           IMemoryCache memoryCache,
-           IOptions<BotSettings> botOptions,
-           ITeamInfoHelper teamsInfoHelper,
-           IHttpContextAccessor httpContextAccessor)
+        var httpContext = this.httpContextAccessor.HttpContext;
+
+        // Wrap the request stream so that we can rewind it back to the start for regular request processing.
+        httpContext.Request.EnableBuffering();
+
+        if (!string.IsNullOrEmpty(value: httpContext.Request.QueryString.Value))
         {
-            this.memoryCache = memoryCache;
-            this.httpContextAccessor = httpContextAccessor;
-            this.botOptions = botOptions ?? throw new ArgumentNullException(nameof(botOptions));
-            this.teamsInfoHelper = teamsInfoHelper;
+            // Check for query string parameter 'teamId'
+            var requestQuery = httpContext.Request.Query;
+            teamId = requestQuery.Where(queryData => queryData.Key == "teamId")
+                .Select(queryData => queryData.Value.ToString()).FirstOrDefault();
+        }
+        else
+        {
+            context.Fail();
         }
 
-        /// <summary>
-        /// This method handles the authorization requirement.
-        /// </summary>
-        /// <param name="context">AuthorizationHandlerContext instance.</param>
-        /// <param name="requirement">IAuthorizationRequirement instance.</param>
-        /// <returns>A task that represents the work queued to execute.</returns>
-        protected override async Task HandleRequirementAsync(
-            AuthorizationHandlerContext context,
-            MustBeLnDTeamMemberRequirement requirement)
+        if (await this.ValidateUserIsPartOfTeamAsync(teamId: teamId, userAadObjectId: claim.Value))
         {
-            context = context ?? throw new ArgumentNullException(nameof(context));
+            context.Succeed(requirement: requirement);
+        }
+    }
 
-            string teamId = string.Empty;
-            var oidClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
+    /// <summary>
+    /// Check if a user is a member of a certain team.
+    /// </summary>
+    /// <param name="teamId">The team id that the validator uses to check if the user is a member of the team. </param>
+    /// <param name="userAadObjectId">The user's Azure Active Directory object id.</param>
+    /// <returns>The flag indicates that the user is a part of certain team or not.</returns>
+    private async Task<bool> ValidateUserIsPartOfTeamAsync(
+        string teamId,
+        string userAadObjectId)
+    {
+        // The key is generated by combining teamId and user object id.
+        var isCacheEntryExists = this.memoryCache.TryGetValue(key: this.GetCacheKey(teamId: teamId, userAadObjectId: userAadObjectId), value: out bool isUserValidMember);
 
-            var claim = context.User.Claims.FirstOrDefault(p => oidClaimType.Equals(p.Type, StringComparison.OrdinalIgnoreCase));
+        if (!isCacheEntryExists)
+        {
+            // If cache duration is not specified then by default cache for 60 minutes
+            var cacheDurationInMinutes = TimeSpan.FromMinutes(value: this.botOptions.Value.CacheDurationInMinutes);
+            cacheDurationInMinutes = cacheDurationInMinutes.Minutes <= 0 ? TimeSpan.FromMinutes(value: 60) : cacheDurationInMinutes;
 
-            var httpContext = this.httpContextAccessor.HttpContext;
-
-            // Wrap the request stream so that we can rewind it back to the start for regular request processing.
-            httpContext.Request.EnableBuffering();
-
-            if (!string.IsNullOrEmpty(httpContext.Request.QueryString.Value))
-            {
-                // Check for query string parameter 'teamId'
-                var requestQuery = httpContext.Request.Query;
-                teamId = requestQuery.Where(queryData => queryData.Key == "teamId")
-                    .Select(queryData => queryData.Value.ToString()).FirstOrDefault();
-            }
-            else
-            {
-                context.Fail();
-            }
-
-            if (await this.ValidateUserIsPartOfTeamAsync(teamId, claim.Value))
-            {
-                context.Succeed(requirement);
-            }
+            var teamMember = await this.teamsInfoHelper.GetTeamMemberAsync(teamId: teamId, userId: userAadObjectId);
+            isUserValidMember = teamMember != null;
+            this.memoryCache.Set(key: this.GetCacheKey(teamId: teamId, userAadObjectId: userAadObjectId), value: isUserValidMember, absoluteExpirationRelativeToNow: cacheDurationInMinutes);
         }
 
-        /// <summary>
-        /// Check if a user is a member of a certain team.
-        /// </summary>
-        /// <param name="teamId">The team id that the validator uses to check if the user is a member of the team. </param>
-        /// <param name="userAadObjectId">The user's Azure Active Directory object id.</param>
-        /// <returns>The flag indicates that the user is a part of certain team or not.</returns>
-        private async Task<bool> ValidateUserIsPartOfTeamAsync(string teamId, string userAadObjectId)
-        {
-            // The key is generated by combining teamId and user object id.
-            bool isCacheEntryExists = this.memoryCache.TryGetValue(this.GetCacheKey(teamId, userAadObjectId), out bool isUserValidMember);
+        return isUserValidMember;
+    }
 
-            if (!isCacheEntryExists)
-            {
-                // If cache duration is not specified then by default cache for 60 minutes
-                var cacheDurationInMinutes = TimeSpan.FromMinutes(this.botOptions.Value.CacheDurationInMinutes);
-                cacheDurationInMinutes = cacheDurationInMinutes.Minutes <= 0 ? TimeSpan.FromMinutes(60) : cacheDurationInMinutes;
-
-                var teamMember = await this.teamsInfoHelper.GetTeamMemberAsync(teamId, userAadObjectId);
-                isUserValidMember = teamMember != null;
-                this.memoryCache.Set(this.GetCacheKey(teamId, userAadObjectId), isUserValidMember, cacheDurationInMinutes);
-            }
-
-            return isUserValidMember;
-        }
-
-        /// <summary>
-        /// // Generate key by combining teamId and user object id.
-        /// </summary>
-        /// <param name="teamId">The team id that the validator uses to check if the user is a member of the team. </param>
-        /// <param name="userAadObjectId">The user's Azure Active Directory object id.</param>
-        /// <returns>Generated key.</returns>
-        private string GetCacheKey(string teamId, string userAadObjectId)
-        {
-            return "_tm$" + teamId + "$" + userAadObjectId;
-        }
+    /// <summary>
+    /// // Generate key by combining teamId and user object id.
+    /// </summary>
+    /// <param name="teamId">The team id that the validator uses to check if the user is a member of the team. </param>
+    /// <param name="userAadObjectId">The user's Azure Active Directory object id.</param>
+    /// <returns>Generated key.</returns>
+    private string GetCacheKey(
+        string teamId,
+        string userAadObjectId)
+    {
+        return "_tm$" + teamId + "$" + userAadObjectId;
     }
 }

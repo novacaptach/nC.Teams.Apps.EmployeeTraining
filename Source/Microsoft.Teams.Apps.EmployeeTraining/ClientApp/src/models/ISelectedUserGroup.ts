@@ -3,9 +3,9 @@
 // </copyright>
 
 export interface ISelectedUserGroup {
-    displayName: string,
-    id: string,
-    email: string,
-    isGroup: boolean,
-    isMandatory: boolean,
+  displayName: string;
+  id: string;
+  email: string;
+  isGroup: boolean;
+  isMandatory: boolean;
 }

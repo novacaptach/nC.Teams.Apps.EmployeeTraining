@@ -3,7 +3,6 @@
 // </copyright>
 
 import axios from "./axios-decorator";
-import { AxiosRequestConfig } from "axios";
 import { IEvent } from "../models/IEvent";
 import Constants from "../constants/constants";
 import { getAPIRequestConfigParams } from "../helpers/api-helper";
@@ -14,11 +13,11 @@ import { getAPIRequestConfigParams } from "../helpers/api-helper";
  * @param teamId The LnD team Id
  */
 export const uploadEventImage = async (formData: FormData, teamId: string) => {
-    let url = `${Constants.apiBaseURL}/eventfiles/upload-image`;
-    let config: AxiosRequestConfig = getAPIRequestConfigParams({ teamId: teamId });
+  const url = `${Constants.apiBaseURL}/eventfiles/upload-image`;
+  const config = getAPIRequestConfigParams({ teamId: teamId });
 
-    return await axios.post(url, formData, config);
-}
+  return await axios.post(url, formData, config);
+};
 
 /**
  * Save event as draft
@@ -26,11 +25,11 @@ export const uploadEventImage = async (formData: FormData, teamId: string) => {
  * @param teamId The LnD team Id
  */
 export const saveEventAsDraft = async (event: IEvent, teamId: string) => {
-    let url = `${Constants.apiBaseURL}/eventworkflow/create-draft`;
-    let config: AxiosRequestConfig = getAPIRequestConfigParams({ teamId: teamId });
+  const url = `${Constants.apiBaseURL}/eventworkflow/create-draft`;
+  const config = getAPIRequestConfigParams({ teamId: teamId });
 
-    return await axios.post(url, event, config);
-}
+  return await axios.post(url, event, config);
+};
 
 /**
  * Update draft event
@@ -38,11 +37,11 @@ export const saveEventAsDraft = async (event: IEvent, teamId: string) => {
  * @param teamId The LnD team Id
  */
 export const updateEventAsDraft = async (event: IEvent, teamId: string) => {
-    let url = `${Constants.apiBaseURL}/eventworkflow/update-draft`;
-    let config: AxiosRequestConfig = getAPIRequestConfigParams({ teamId: teamId });
+  const url = `${Constants.apiBaseURL}/eventworkflow/update-draft`;
+  const config = getAPIRequestConfigParams({ teamId: teamId });
 
-    return await axios.patch(url, event, config);
-}
+  return await axios.patch(url, event, config);
+};
 
 /**
  * Create event and add to calendar
@@ -50,11 +49,11 @@ export const updateEventAsDraft = async (event: IEvent, teamId: string) => {
  * @param teamId The LnD team Id
  */
 export const createNewEvent = async (event: IEvent, teamId: string) => {
-    let url = `${Constants.apiBaseURL}/eventworkflow/create-event`;
-    let config: AxiosRequestConfig = getAPIRequestConfigParams({ teamId: teamId });
+  const url = `${Constants.apiBaseURL}/eventworkflow/create-event`;
+  const config = getAPIRequestConfigParams({ teamId: teamId });
 
-    return await axios.post(url, event, config);
-}
+  return await axios.post(url, event, config);
+};
 
 /**
  * Update event details
@@ -62,28 +61,28 @@ export const createNewEvent = async (event: IEvent, teamId: string) => {
  * @param teamId The LnD team Id
  */
 export const updateEvent = async (event: IEvent, teamId: string) => {
-    let url = `${Constants.apiBaseURL}/eventworkflow/update-event`;
-    let config: AxiosRequestConfig = getAPIRequestConfigParams({ teamId: teamId });
+  const url = `${Constants.apiBaseURL}/eventworkflow/update-event`;
+  const config = getAPIRequestConfigParams({ teamId: teamId });
 
-    return await axios.patch(url, event, config);
-}
+  return await axios.patch(url, event, config);
+};
 
 /**
  * Gets event categories
  * @param teamId The LnD team Id
  */
 export const getEventCategoriesAsync = async () => {
-    let url = `${Constants.apiBaseURL}/category/get-categories-for-event`;
-    return await axios.get(url);
-}
+  const url = `${Constants.apiBaseURL}/category/get-categories-for-event`;
+  return await axios.get(url);
+};
 
 /**
  * Check for event with same name
  * @param eventName User entered event name
  */
-export const searchEventAsync = async (eventName:string) => {
-    let url = `${Constants.apiBaseURL}/event/search-by-title`;
-    let config: AxiosRequestConfig = getAPIRequestConfigParams({ search: eventName });
+export const searchEventAsync = async (eventName: string) => {
+  const url = `${Constants.apiBaseURL}/event/search-by-title`;
+  const config = getAPIRequestConfigParams({ search: eventName });
 
-    return await axios.get(url, config);
-}
+  return await axios.get(url, config);
+};

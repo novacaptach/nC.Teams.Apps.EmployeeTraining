@@ -2,295 +2,285 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Tests.Helpers
+namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Helpers;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
+using Microsoft.Teams.Apps.EmployeeTraining.Models;
+using Microsoft.Teams.Apps.EmployeeTraining.Models.Configuration;
+using Microsoft.Teams.Apps.EmployeeTraining.Models.Enums;
+using Microsoft.Teams.Apps.EmployeeTraining.Repositories;
+using Microsoft.Teams.Apps.EmployeeTraining.Resources;
+using Microsoft.Teams.Apps.EmployeeTraining.Services.SearchService;
+using Microsoft.Teams.Apps.EmployeeTraining.Test.Providers;
+using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using User = Microsoft.Graph.User;
+
+[TestClass]
+public class EventWorkflowHelperTest
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using System.Collections.Generic;
-    using Moq;
-    using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
-    using Microsoft.Extensions.Localization;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
-    using System.Threading.Tasks;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.Providers;
-    using System.Linq;
-    using Microsoft.Teams.Apps.EmployeeTraining.Models;
-    using BotSchema = Microsoft.Bot.Schema;
-    using Microsoft.Extensions.Options;
-    using Microsoft.Teams.Apps.EmployeeTraining.Repositories;
-    using Microsoft.Teams.Apps.EmployeeTraining.Services;
+    private Mock<ICategoryHelper> categoryHelper;
+    private Mock<IEventGraphHelper> eventGraphHelper;
+    private Mock<IEventSearchService> eventSearchServiceProvider;
+    private Mock<IEventRepository> eventStorageProvider;
+    private EventStorageProviderFake eventStorageProviderFake;
+    private EventWorkflowHelper eventWorkflowHelper;
+    private Mock<IGroupGraphHelper> groupGraphHelper;
+    private Mock<ILnDTeamConfigurationRepository> lnDTeamConfigurationStorageProvider;
+    private Mock<IOptions<BotSettings>> mockBotSettings;
+    private Mock<INotificationHelper> notificationHelper;
+    private UserConfigurationStorageProviderFake userConfigurationStorageProviderFake;
+    private Mock<IUserGraphHelper> userGraphHelper;
+    private Mock<IUserConfigurationRepository> userStorageConfigurationProvider;
 
-    [TestClass]
-    public class EventWorkflowHelperTest
+    [TestInitialize]
+    public void EventWorkflowHelperTestSetup()
     {
-        Mock<IEventRepository> eventStorageProvider;
-        Mock<IEventSearchService> eventSearchServiceProvider;
-        Mock<IEventGraphHelper> eventGraphHelper;
-        Mock<IGroupGraphHelper> groupGraphHelper;
-        Mock<IUserGraphHelper> userGraphHelper;
-        Mock<INotificationHelper> notificationHelper;
-        Mock<IUserConfigurationRepository> userStorageConfigurationProvider;
-        Mock<ILnDTeamConfigurationRepository> lnDTeamConfigurationStorageProvider;
-        Mock<ICategoryHelper> categoryHelper;
-        EventWorkflowHelper eventWorkflowHelper;
-        EventStorageProviderFake eventStorageProviderFake;
-        UserConfigurationStorageProviderFake userConfigurationStorageProviderFake;
-        Mock<IOptions<BotSettings>> mockBotSettings;
+        var localizer = new Mock<IStringLocalizer<Strings>>().Object;
+        this.eventGraphHelper = new Mock<IEventGraphHelper>();
+        this.userGraphHelper = new Mock<IUserGraphHelper>();
+        this.groupGraphHelper = new Mock<IGroupGraphHelper>();
+        this.notificationHelper = new Mock<INotificationHelper>();
+        this.eventStorageProvider = new Mock<IEventRepository>();
+        this.eventSearchServiceProvider = new Mock<IEventSearchService>();
+        this.eventStorageProviderFake = new EventStorageProviderFake();
+        this.userStorageConfigurationProvider = new Mock<IUserConfigurationRepository>();
+        this.userConfigurationStorageProviderFake = new UserConfigurationStorageProviderFake();
+        this.lnDTeamConfigurationStorageProvider = new Mock<ILnDTeamConfigurationRepository>();
+        this.categoryHelper = new Mock<ICategoryHelper>();
+        this.mockBotSettings = new Mock<IOptions<BotSettings>>();
 
-        [TestInitialize]
-        public void EventWorkflowHelperTestSetup()
-        {
-            var localizer = new Mock<IStringLocalizer<Strings>>().Object;
-            eventGraphHelper = new Mock<IEventGraphHelper>();
-            userGraphHelper = new Mock<IUserGraphHelper>();
-            groupGraphHelper = new Mock<IGroupGraphHelper>();
-            notificationHelper = new Mock<INotificationHelper>();
-            eventStorageProvider = new Mock<IEventRepository>();
-            eventSearchServiceProvider = new Mock<IEventSearchService>();
-            eventStorageProviderFake = new EventStorageProviderFake();
-            userStorageConfigurationProvider = new Mock<IUserConfigurationRepository>();
-            userConfigurationStorageProviderFake = new UserConfigurationStorageProviderFake();
-            lnDTeamConfigurationStorageProvider = new Mock<ILnDTeamConfigurationRepository>();
-            categoryHelper = new Mock<ICategoryHelper>();
-            mockBotSettings = new Mock<IOptions<BotSettings>>();
+        this.eventWorkflowHelper = new EventWorkflowHelper(eventRepository: this.eventStorageProvider.Object, eventSearchService: this.eventSearchServiceProvider.Object, eventGraphHelper: this.eventGraphHelper.Object, groupGraphHelper: this.groupGraphHelper.Object, userConfigurationRepository: this.userStorageConfigurationProvider.Object, teamConfigurationRepository: this.lnDTeamConfigurationStorageProvider.Object, categoryHelper: this.categoryHelper.Object,
+            localizer: localizer, userGraphHelper: this.userGraphHelper.Object, notificationHelper: this.notificationHelper.Object,
+            botOptions: EventWorkflowHelperData.botOptions);
+    }
 
-            eventWorkflowHelper = new EventWorkflowHelper(
-                eventStorageProvider.Object,
-                eventSearchServiceProvider.Object,
-                eventGraphHelper.Object,
-                groupGraphHelper.Object,
-                userStorageConfigurationProvider.Object,
-                lnDTeamConfigurationStorageProvider.Object,
-                categoryHelper.Object,
-                localizer,
-                userGraphHelper.Object,
-                notificationHelper.Object,
-                EventWorkflowHelperData.botOptions);
-        }
+    [TestMethod]
+    public async Task UpdateDraftEventAsync()
+    {
+        var eventToUpdate = EventWorkflowHelperData.eventEntity;
 
-        [TestMethod]
-        public async Task UpdateDraftEventAsync()
-        {
-            var eventToUpdate = EventWorkflowHelperData.eventEntity;
-            
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(eventToUpdate.EventId, eventToUpdate.TeamId))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync(eventToUpdate.EventId, eventToUpdate.TeamId));
-            
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(eventToUpdate.EventId, eventToUpdate.TeamId))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: eventToUpdate.EventId, teamId: eventToUpdate.TeamId));
 
-            this.eventSearchServiceProvider
-                .Setup(x => x.RunIndexerOnDemandAsync())
-                .Returns(Task.FromResult(true));
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            var result = await this.eventWorkflowHelper.UpdateDraftEventAsync(EventWorkflowHelperData.eventEntity);
-            Assert.AreEqual(result, true);
-        }
+        this.eventSearchServiceProvider
+            .Setup(x => x.RunIndexerOnDemandAsync())
+            .Returns(value: Task.FromResult(result: true));
 
-        [TestMethod]
-        public async Task DeleteDraftEventAsync()
-        {
-            var eventToDelete = EventWorkflowHelperData.eventEntity;
+        var result = await this.eventWorkflowHelper.UpdateDraftEventAsync(eventEntity: EventWorkflowHelperData.eventEntity);
+        Assert.AreEqual(expected: result, actual: true);
+    }
 
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(eventToDelete.EventId, eventToDelete.TeamId))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync(eventToDelete.EventId, eventToDelete.TeamId));
+    [TestMethod]
+    public async Task DeleteDraftEventAsync()
+    {
+        var eventToDelete = EventWorkflowHelperData.eventEntity;
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(eventToDelete.EventId, eventToDelete.TeamId))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: eventToDelete.EventId, teamId: eventToDelete.TeamId));
 
-            this.eventSearchServiceProvider
-                .Setup(x => x.RunIndexerOnDemandAsync())
-                .Returns(Task.FromResult(true));
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            var result = await this.eventWorkflowHelper.DeleteDraftEventAsync(eventToDelete.TeamId, eventToDelete.EventId);
-            Assert.AreEqual(result, true);
-        }
+        this.eventSearchServiceProvider
+            .Setup(x => x.RunIndexerOnDemandAsync())
+            .Returns(value: Task.FromResult(result: true));
 
-        [TestMethod]
-        public async Task UpdateEventAsync()
-        {
-            var eventToUpdate = EventWorkflowHelperData.eventEntity;
+        var result = await this.eventWorkflowHelper.DeleteDraftEventAsync(teamId: eventToDelete.TeamId, eventId: eventToDelete.EventId);
+        Assert.AreEqual(expected: result, actual: true);
+    }
 
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync("activeEventId", eventToUpdate.TeamId));
+    [TestMethod]
+    public async Task UpdateEventAsync()
+    {
+        var eventToUpdate = EventWorkflowHelperData.eventEntity;
 
-            this.eventGraphHelper
-                .Setup(x => x.UpdateEventAsync(It.IsAny<EventEntity>()))
-                .Returns(Task.FromResult(EventWorkflowHelperData.teamEvent));
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: "activeEventId", teamId: eventToUpdate.TeamId));
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+        this.eventGraphHelper
+            .Setup(x => x.UpdateEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: Task.FromResult(result: EventWorkflowHelperData.teamEvent));
 
-            this.eventSearchServiceProvider
-                .Setup(x => x.RunIndexerOnDemandAsync())
-                .Returns(Task.FromResult(true));
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            var result = await this.eventWorkflowHelper.UpdateEventAsync(EventWorkflowHelperData.eventEntity);
-            Assert.AreEqual(result, true);
-        }
+        this.eventSearchServiceProvider
+            .Setup(x => x.RunIndexerOnDemandAsync())
+            .Returns(value: Task.FromResult(result: true));
 
-        [TestMethod]
-        public async Task CloseEventRegistrations()
-        {
-            var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
+        var result = await this.eventWorkflowHelper.UpdateEventAsync(eventEntity: EventWorkflowHelperData.eventEntity);
+        Assert.AreEqual(expected: result, actual: true);
+    }
 
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync(eventToCloseRegistration.EventId, eventToCloseRegistration.TeamId));
+    [TestMethod]
+    public async Task CloseEventRegistrations()
+    {
+        var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: eventToCloseRegistration.EventId, teamId: eventToCloseRegistration.TeamId));
 
-            this.eventSearchServiceProvider
-                .Setup(x => x.RunIndexerOnDemandAsync())
-                .Returns(Task.FromResult(true));
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            var result = await this.eventWorkflowHelper.CloseEventRegistrationsAsync(eventToCloseRegistration.TeamId, eventToCloseRegistration.EventId, "8781d219-3920-4b4a-b280-48a17d2f23a6");
-            Assert.AreEqual(result, false);
-        }
-        
-        [TestMethod]
-        public async Task CloseEventRegistrationsFail()
-        {
-            var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
+        this.eventSearchServiceProvider
+            .Setup(x => x.RunIndexerOnDemandAsync())
+            .Returns(value: Task.FromResult(result: true));
 
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(eventToCloseRegistration.EventId, eventToCloseRegistration.TeamId))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync("activeEventId", eventToCloseRegistration.TeamId));
+        var result = await this.eventWorkflowHelper.CloseEventRegistrationsAsync(teamId: eventToCloseRegistration.TeamId, eventId: eventToCloseRegistration.EventId, userAadId: "8781d219-3920-4b4a-b280-48a17d2f23a6");
+        Assert.AreEqual(expected: result, actual: false);
+    }
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+    [TestMethod]
+    public async Task CloseEventRegistrationsFail()
+    {
+        var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
 
-            this.eventSearchServiceProvider
-                .Setup(x => x.RunIndexerOnDemandAsync())
-                .Returns(Task.FromResult(true));
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(eventToCloseRegistration.EventId, eventToCloseRegistration.TeamId))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: "activeEventId", teamId: eventToCloseRegistration.TeamId));
 
-            var result = await this.eventWorkflowHelper.CloseEventRegistrationsAsync(eventToCloseRegistration.TeamId, eventToCloseRegistration.EventId, "8781d219-3920-4b4a-b280-48a17d2f23a6");
-            Assert.AreEqual(result, true);
-        }
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-        [TestMethod]
-        public async Task UpdateEventStatus()
-        {
-            var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
+        this.eventSearchServiceProvider
+            .Setup(x => x.RunIndexerOnDemandAsync())
+            .Returns(value: Task.FromResult(result: true));
 
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(eventToCloseRegistration.EventId, eventToCloseRegistration.TeamId))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync(eventToCloseRegistration.EventId, eventToCloseRegistration.TeamId));
+        var result = await this.eventWorkflowHelper.CloseEventRegistrationsAsync(teamId: eventToCloseRegistration.TeamId, eventId: eventToCloseRegistration.EventId, userAadId: "8781d219-3920-4b4a-b280-48a17d2f23a6");
+        Assert.AreEqual(expected: result, actual: true);
+    }
 
-            this.eventGraphHelper
-                .Setup(x => x.CancelEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.FromResult(true));
+    [TestMethod]
+    public async Task UpdateEventStatus()
+    {
+        var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(eventToCloseRegistration.EventId, eventToCloseRegistration.TeamId))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: eventToCloseRegistration.EventId, teamId: eventToCloseRegistration.TeamId));
 
-            this.eventSearchServiceProvider
-                .Setup(x => x.RunIndexerOnDemandAsync())
-                .Returns(Task.FromResult(true));
+        this.eventGraphHelper
+            .Setup(x => x.CancelEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(value: Task.FromResult(result: true));
 
-            var result = await this.eventWorkflowHelper.UpdateEventStatusAsync(eventToCloseRegistration.TeamId, eventToCloseRegistration.EventId, (EventStatus)2, "8781d219-3920-4b4a-b280-48a17d2f23a6");
-            Assert.AreEqual(result, true);
-        }
-        
-        [TestMethod]
-        public async Task UpdateEventStatusFail()
-        {
-            var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync("completedEventId", eventToCloseRegistration.TeamId));
+        this.eventSearchServiceProvider
+            .Setup(x => x.RunIndexerOnDemandAsync())
+            .Returns(value: Task.FromResult(result: true));
 
-            this.eventGraphHelper
-                .Setup(x => x.CancelEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.FromResult(true));
+        var result = await this.eventWorkflowHelper.UpdateEventStatusAsync(teamId: eventToCloseRegistration.TeamId, eventId: eventToCloseRegistration.EventId, eventStatus: (EventStatus)2, userAadId: "8781d219-3920-4b4a-b280-48a17d2f23a6");
+        Assert.AreEqual(expected: result, actual: true);
+    }
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+    [TestMethod]
+    public async Task UpdateEventStatusFail()
+    {
+        var eventToCloseRegistration = EventWorkflowHelperData.eventEntity;
 
-            this.eventSearchServiceProvider
-                .Setup(x => x.RunIndexerOnDemandAsync())
-                .Returns(Task.FromResult(true));
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: "completedEventId", teamId: eventToCloseRegistration.TeamId));
 
-            var result = await this.eventWorkflowHelper.UpdateEventStatusAsync(eventToCloseRegistration.TeamId, eventToCloseRegistration.EventId, (EventStatus)2, "8781d219-3920-4b4a-b280-48a17d2f23a6");
-            Assert.AreEqual(result, false);
-        }
+        this.eventGraphHelper
+            .Setup(x => x.CancelEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(value: Task.FromResult(result: true));
 
-        [TestMethod]
-        public async Task ExportEventDetailsToCSV()
-        {
-            var eventToExport = EventWorkflowHelperData.eventEntity;
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            this.eventStorageProvider
-                .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(this.eventStorageProviderFake.GetEventDetailsAsync(eventToExport.EventId, eventToExport.TeamId));
+        this.eventSearchServiceProvider
+            .Setup(x => x.RunIndexerOnDemandAsync())
+            .Returns(value: Task.FromResult(result: true));
 
-            this.userGraphHelper
-                .Setup(x => x.GetUsersAsync(It.IsAny<List<string>>()))
-                .Returns(Task.FromResult(EventWorkflowHelperData.graphUsers as IEnumerable<Graph.User>));
+        var result = await this.eventWorkflowHelper.UpdateEventStatusAsync(teamId: eventToCloseRegistration.TeamId, eventId: eventToCloseRegistration.EventId, eventStatus: (EventStatus)2, userAadId: "8781d219-3920-4b4a-b280-48a17d2f23a6");
+        Assert.AreEqual(expected: result, actual: false);
+    }
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+    [TestMethod]
+    public async Task ExportEventDetailsToCSV()
+    {
+        var eventToExport = EventWorkflowHelperData.eventEntity;
 
-            var result = await this.eventWorkflowHelper.ExportEventDetailsToCSVAsync(eventToExport.TeamId, eventToExport.EventId);
-            Assert.AreEqual(result.Length > 0, true);
-        }
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: eventToExport.EventId, teamId: eventToExport.TeamId));
 
-        [TestMethod]
-        public async Task CreateDraftEventAsync()
-        {
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+        this.userGraphHelper
+            .Setup(x => x.GetUsersAsync(It.IsAny<List<string>>()))
+            .Returns(value: Task.FromResult(result: EventWorkflowHelperData.graphUsers as IEnumerable<User>));
 
-            var Result = await this.eventWorkflowHelper.CreateDraftEventAsync(EventWorkflowHelperData.eventEntity);
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            Assert.AreEqual(Result, true);
-        }
+        var result = await this.eventWorkflowHelper.ExportEventDetailsToCSVAsync(teamId: eventToExport.TeamId, eventId: eventToExport.EventId);
+        Assert.AreEqual(expected: result.Length > 0, actual: true);
+    }
 
-        [TestMethod]
-        public async Task CreateNewEventAsync()
-        {
-            this.eventStorageProvider
-               .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
-               .Returns(this.eventStorageProviderFake.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()));
+    [TestMethod]
+    public async Task CreateDraftEventAsync()
+    {
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            this.eventGraphHelper
-                .Setup(x => x.CreateEventAsync(It.IsAny<EventEntity>()))
-                .Returns(Task.FromResult(EventWorkflowHelperData.teamEvent));
+        var Result = await this.eventWorkflowHelper.CreateDraftEventAsync(eventEntity: EventWorkflowHelperData.eventEntity);
 
-            this.eventStorageProvider
-                .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
-                .Returns(this.eventStorageProviderFake.UpsertEventAsync(EventWorkflowHelperData.eventEntity));
+        Assert.AreEqual(expected: Result, actual: true);
+    }
 
-            var events = EventWorkflowHelperData.eventEntities;
-            var eventCategoryIds = events.Select(eventDetails => eventDetails?.CategoryId).ToArray();
+    [TestMethod]
+    public async Task CreateNewEventAsync()
+    {
+        this.eventStorageProvider
+            .Setup(x => x.GetEventDetailsAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(value: this.eventStorageProviderFake.GetEventDetailsAsync(eventId: It.IsAny<string>(), teamId: It.IsAny<string>()));
 
-            this.lnDTeamConfigurationStorageProvider
-                .Setup(x => x.GetTeamDetailsAsync(It.IsAny<string>()))
-                .Returns(Task.FromResult(EventWorkflowHelperData.lndTeam));
+        this.eventGraphHelper
+            .Setup(x => x.CreateEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: Task.FromResult(result: EventWorkflowHelperData.teamEvent));
 
-            this.mockBotSettings
-                .Setup(x => x.Value)
-                .Returns(EventWorkflowHelperData.botOptions.Value);
+        this.eventStorageProvider
+            .Setup(x => x.UpsertEventAsync(It.IsAny<EventEntity>()))
+            .Returns(value: this.eventStorageProviderFake.UpsertEventAsync(eventDetails: EventWorkflowHelperData.eventEntity));
 
-            var result = await this.eventWorkflowHelper.CreateNewEventAsync(EventWorkflowHelperData.eventEntity, "");
+        var events = EventWorkflowHelperData.eventEntities;
+        var eventCategoryIds = events.Select(eventDetails => eventDetails?.CategoryId).ToArray();
 
-            Assert.AreEqual(result, true);
+        this.lnDTeamConfigurationStorageProvider
+            .Setup(x => x.GetTeamDetailsAsync(It.IsAny<string>()))
+            .Returns(value: Task.FromResult(result: EventWorkflowHelperData.lndTeam));
 
-        }
+        this.mockBotSettings
+            .Setup(x => x.Value)
+            .Returns(value: EventWorkflowHelperData.botOptions.Value);
+
+        var result = await this.eventWorkflowHelper.CreateNewEventAsync(eventEntity: EventWorkflowHelperData.eventEntity, createdByName: "");
+
+        Assert.AreEqual(expected: result, actual: true);
     }
 }
-
-

@@ -5,35 +5,35 @@
 */
 
 export default class Constants {
-	//Themes
-	public static readonly body: string = "body";
-	public static readonly theme: string = "theme";
-	public static readonly default: string = "default";
-	public static readonly light: string = "light";
-	public static readonly dark: string = "dark";
-	public static readonly contrast: string = "contrast";
+  //Themes
+  static readonly body = "body";
+  static readonly theme = "theme";
+  static readonly default = "default";
+  static readonly light = "light";
+  static readonly dark = "dark";
+  static readonly contrast = "contrast";
 
-	//Constants for manage categories
-	public static readonly categoryNameMaxLength: number = 100;
-	public static readonly categoryDescriptionMaxLength: number = 300;
+  //Constants for manage categories
+  static readonly categoryNameMaxLength = 100;
+  static readonly categoryDescriptionMaxLength = 300;
 
-	public static readonly lazyLoadEventsCount: number = 50;
+  static readonly lazyLoadEventsCount = 50;
 
-	public static readonly maxWidthForMobileView: number = 750;
+  static readonly maxWidthForMobileView = 750;
 
-	/** The base URL for API */
-	public static readonly apiBaseURL = window.location.origin + "/api";
+  /** The base URL for API */
+  static readonly apiBaseURL = window.location.origin + "/api";
 }
 
 /** Indicates the operations that can be done on event categories */
 export enum CategoryOperations {
-	Add,
-	Edit,
-	Delete,
-	Unknown
+  Add,
+  Edit,
+  Delete,
+  Unknown,
 }
 
 /** Indicates the response status codes */
 export enum ResponseStatus {
-	OK = 200
+  OK = 200,
 }

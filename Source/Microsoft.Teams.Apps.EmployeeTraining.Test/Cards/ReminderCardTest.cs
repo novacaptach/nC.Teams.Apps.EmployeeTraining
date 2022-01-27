@@ -2,35 +2,34 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Cards
+namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Cards;
+
+using System.Collections.Generic;
+using AdaptiveCards;
+using Microsoft.Extensions.Localization;
+using Microsoft.Teams.Apps.EmployeeTraining.Cards;
+using Microsoft.Teams.Apps.EmployeeTraining.Models;
+using Microsoft.Teams.Apps.EmployeeTraining.Resources;
+using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+
+[TestClass]
+public class ReminderCardTest
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Moq;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
-    using Microsoft.Teams.Apps.EmployeeTraining.Cards;
-    using Microsoft.Extensions.Localization;
-    using AdaptiveCards;
-    using System.Collections.Generic;
-    using Microsoft.Teams.Apps.EmployeeTraining.Models;
+    private Mock<IStringLocalizer<Strings>> localizer;
 
-    [TestClass]
-    public class ReminderCardTest
+    [TestInitialize]
+    public void ReminderCardTestSetup()
     {
-        Mock<IStringLocalizer<Strings>> localizer;
+        this.localizer = new Mock<IStringLocalizer<Strings>>();
+    }
 
-        [TestInitialize]
-        public void ReminderCardTestSetup()
-        {
-            localizer = new Mock<IStringLocalizer<Strings>>();
-        }
+    [TestMethod]
+    public void GetCard()
+    {
+        var Results = ReminderCard.GetCard(events: new List<EventEntity> { EventWorkflowHelperData.validEventEntity }, localizer: this.localizer.Object, applicationManifestId: "random");
 
-        [TestMethod]
-        public void GetCard()
-        {
-            var Results = ReminderCard.GetCard( new List<EventEntity> { EventWorkflowHelperData.validEventEntity }, localizer.Object, "random", NotificationType.Manual);
-
-            Assert.AreEqual(Results.ContentType, AdaptiveCard.ContentType);
-        }
-
+        Assert.AreEqual(expected: Results.ContentType, actual: AdaptiveCard.ContentType);
     }
 }

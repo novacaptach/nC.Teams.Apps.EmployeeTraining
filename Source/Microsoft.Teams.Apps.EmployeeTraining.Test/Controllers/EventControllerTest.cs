@@ -4,6 +4,10 @@
 
 namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 {
+    using System.Collections.Generic;
+    using System.Security.Claims;
+    using System.Security.Principal;
+    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
@@ -13,23 +17,19 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
     using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
     using Microsoft.Teams.Apps.EmployeeTraining.Models;
     using Microsoft.Teams.Apps.EmployeeTraining.Models.Enums;
-    using Microsoft.Teams.Apps.EmployeeTraining.Services;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
+    using Microsoft.Teams.Apps.EmployeeTraining.Services.SearchService;
+    using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
-    using System.Collections.Generic;
-    using System.Security.Claims;
-    using System.Security.Principal;
-    using System.Threading.Tasks;
 
     [TestClass]
     public class EventControllerTest
     {
-        EventController eventController;
         Mock<ICategoryHelper> categoryHelper;
-        Mock<IUserEventsHelper> userEventsHelper;
-        Mock<IUserEventSearchService> userEventSearchService;
+        EventController eventController;
         TelemetryClient telemetryClient;
+        Mock<IUserEventSearchService> userEventSearchService;
+        Mock<IUserEventsHelper> userEventsHelper;
 
         [TestInitialize]
         public void EventControllerTestSetup()
@@ -50,7 +50,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             var httpContext = MakeFakeContext();
             eventController.ControllerContext = new ControllerContext
             {
-                HttpContext = httpContext
+                HttpContext = httpContext,
             };
         }
 
@@ -60,7 +60,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
             this.userEventsHelper
                 .Setup(u => u.GetEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.FromResult(EventWorkflowHelperData.eventEntity));
-            
+
             this.categoryHelper
                 .Setup(e => e.BindCategoryNameAsync(It.IsAny<IEnumerable<EventEntity>>()))
                 .Returns(Task.FromResult(true));
@@ -69,14 +69,14 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task GetEventsAsync_ReturnsOkResult()
         {
             this.userEventSearchService
                 .Setup(u => u.GetEventsAsync(new SearchParametersDto()))
                 .Returns(Task.FromResult(EventWorkflowHelperData.eventEntities as IEnumerable<EventEntity>));
-            
+
             this.categoryHelper
                 .Setup(e => e.BindCategoryNameAsync(It.IsAny<IEnumerable<EventEntity>>()))
                 .Returns(Task.FromResult(true));
@@ -85,7 +85,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task RegisterToEventAsync_ReturnsOkResult()
         {
@@ -97,7 +97,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task UnregisterToEventAsync_ReturnsOkResult()
         {
@@ -109,7 +109,7 @@ namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Controllers
 
             Assert.AreEqual(Result.StatusCode, StatusCodes.Status200OK);
         }
-        
+
         [TestMethod]
         public async Task SearchEventAsync_ReturnsOkResult()
         {

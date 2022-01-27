@@ -2,26 +2,25 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Models.Enums
+namespace Microsoft.Teams.Apps.EmployeeTraining.Models.Enums;
+
+/// <summary>
+/// Indicates the event operation
+/// </summary>
+public enum EventOperationType
 {
     /// <summary>
-    /// Indicates the event operation
+    /// No event operation
     /// </summary>
-    public enum EventOperationType
-    {
-        /// <summary>
-        /// No event operation
-        /// </summary>
-        None,
+    None,
 
-        /// <summary>
-        /// The close event registration
-        /// </summary>
-        CloseRegistration,
+    /// <summary>
+    /// The close event registration
+    /// </summary>
+    CloseRegistration,
 
-        /// <summary>
-        /// Cancel an event
-        /// </summary>
-        CancelEvent,
-    }
+    /// <summary>
+    /// Cancel an event
+    /// </summary>
+    CancelEvent,
 }

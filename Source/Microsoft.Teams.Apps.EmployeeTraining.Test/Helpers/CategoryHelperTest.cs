@@ -2,92 +2,87 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Tests.Helpers
+namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Helpers;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
+using Microsoft.Teams.Apps.EmployeeTraining.Models;
+using Microsoft.Teams.Apps.EmployeeTraining.Repositories;
+using Microsoft.Teams.Apps.EmployeeTraining.Services.SearchService;
+using Microsoft.Teams.Apps.EmployeeTraining.Test.Providers;
+using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+
+[TestClass]
+public class CategoryHelperTest
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Moq;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
-    using System.Threading.Tasks;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.Providers;
-    using Microsoft.Teams.Apps.EmployeeTraining.Models;
-    using System.Linq;
-    using Microsoft.Teams.Apps.EmployeeTraining.Repositories;
-    using Microsoft.Teams.Apps.EmployeeTraining.Services;
-    using Microsoft.Teams.Apps.EmployeeTraining.Helpers;
-    using System.Collections.Generic;
+    private CategoryHelper categoryHelper;
+    private Mock<ICategoryRepository> categoryStorageProvider;
+    private CategoryStorageProviderFake categoryStorageProviderFake;
+    private Mock<ITeamEventSearchService> teamEventSearchService;
 
-    [TestClass]
-    public class CategoryHelperTest
+    [TestInitialize]
+    public void CategoryHelperTestSetup()
     {
-        CategoryHelper categoryHelper;
-        Mock<ICategoryRepository> categoryStorageProvider;
-        CategoryStorageProviderFake categoryStorageProviderFake;
-        Mock<ITeamEventSearchService> teamEventSearchService;
+        this.categoryStorageProvider = new Mock<ICategoryRepository>();
+        this.teamEventSearchService = new Mock<ITeamEventSearchService>();
+        this.categoryStorageProviderFake = new CategoryStorageProviderFake();
 
-        [TestInitialize]
-        public void CategoryHelperTestSetup()
-        {
-            categoryStorageProvider = new Mock<ICategoryRepository>();
-            teamEventSearchService = new Mock<ITeamEventSearchService>();
-            this.categoryStorageProviderFake = new CategoryStorageProviderFake();
+        this.categoryHelper = new CategoryHelper(teamEventSearchService: this.teamEventSearchService.Object, categoryRepository: this.categoryStorageProvider.Object);
+    }
 
-            categoryHelper = new CategoryHelper(
-                teamEventSearchService.Object,
-                categoryStorageProvider.Object);
-        }
+    [TestMethod]
+    public async Task ValidateCategoryInUse_NotInUse()
+    {
+        const string categoryToTest = "ad4b2b43-1cb5-408d-ab8a-17e28edac1ba";
+        var searchParamsDto = new SearchParametersDto();
 
-        [TestMethod]
-        public async Task ValidateCategoryInUse_NotInUse()
-        {
-            const string categoryToTest = "ad4b2b43-1cb5-408d-ab8a-17e28edac1ba";
-            var searchParamsDto = new SearchParametersDto();
+        this.teamEventSearchService
+            .Setup(t => t.GetEventsAsync(searchParamsDto))
+            .Returns(value: Task.FromResult(result: EventWorkflowHelperData.eventEntities.Where(e => e.CategoryId == categoryToTest)));
 
-            this.teamEventSearchService
-                .Setup(t => t.GetEventsAsync(searchParamsDto))
-                .Returns(Task.FromResult(EventWorkflowHelperData.eventEntities.Where(e => e.CategoryId == categoryToTest)));
+        await this.categoryHelper.CheckIfCategoryIsInUseAsync(categories: EventWorkflowHelperData.categoryList);
 
-            await this.categoryHelper.CheckIfCategoryIsInUseAsync(EventWorkflowHelperData.categoryList);
+        Assert.AreEqual(expected: false, actual: EventWorkflowHelperData.categoryList.Where(e => e.CategoryId == categoryToTest).FirstOrDefault().IsInUse);
+    }
 
-            Assert.AreEqual(false, EventWorkflowHelperData.categoryList.Where(e => e.CategoryId == categoryToTest).FirstOrDefault().IsInUse);
-        }
+    [TestMethod]
+    public async Task DeleteCategoriesAsync()
+    {
+        const string categoryToTest = "ad4b2b43-1cb5-408d-ab8a-17e28edac1ba,ad4b2b43-1cb5-408d-ab8a-17e28edac2ba";
+        var searchParamsDto = new SearchParametersDto();
 
-        [TestMethod]
-        public async Task DeleteCategoriesAsync()
-        {
-            const string categoryToTest = "ad4b2b43-1cb5-408d-ab8a-17e28edac1ba,ad4b2b43-1cb5-408d-ab8a-17e28edac2ba";
-            var searchParamsDto = new SearchParametersDto();
+        this.teamEventSearchService
+            .Setup(t => t.GetEventsAsync(searchParamsDto))
+            .Returns(value: Task.FromResult(result: EventWorkflowHelperData.eventEntities.Where(e => e.CategoryId == categoryToTest)));
 
-            this.teamEventSearchService
-                .Setup(t => t.GetEventsAsync(searchParamsDto))
-                .Returns(Task.FromResult(EventWorkflowHelperData.eventEntities.Where(e => e.CategoryId == categoryToTest)));
+        this.categoryStorageProvider
+            .Setup(t => t.GetCategoriesByIdsAsync(It.IsAny<string[]>()))
+            .Returns(value: Task.FromResult(result: EventWorkflowHelperData.categoryList as IEnumerable<Category>));
+        this.categoryStorageProvider
+            .Setup(t => t.DeleteCategoriesInBatchAsync(It.IsAny<IEnumerable<Category>>()))
+            .Returns(value: Task.FromResult(result: true));
 
-            this.categoryStorageProvider
-                .Setup(t => t.GetCategoriesByIdsAsync(It.IsAny<string[]>()))
-                .Returns(Task.FromResult(EventWorkflowHelperData.categoryList as IEnumerable<Category>));
-            this.categoryStorageProvider
-                .Setup(t => t.DeleteCategoriesInBatchAsync(It.IsAny<IEnumerable<Category>>()))
-                .Returns(Task.FromResult(true));
+        var Result = await this.categoryHelper.DeleteCategoriesAsync(categoryIds: categoryToTest);
 
-            var Result = await this.categoryHelper.DeleteCategoriesAsync(categoryToTest);
+        Assert.AreEqual(expected: true, actual: Result);
+    }
 
-            Assert.AreEqual(true, Result);
-        }
+    [TestMethod]
+    public async Task BindCategoryDetailsAsync()
+    {
+        var events = EventWorkflowHelperData.eventEntities;
+        var eventCategoryIds = events.Select(eventDetails => eventDetails?.CategoryId).ToArray();
 
-        [TestMethod]
-        public async Task BindCategoryDetailsAsync()
-        {
-            var events = EventWorkflowHelperData.eventEntities;
-            var eventCategoryIds = events.Select(eventDetails => eventDetails?.CategoryId).ToArray();
+        this.categoryStorageProvider
+            .Setup(x => x.GetCategoriesByIdsAsync(eventCategoryIds))
+            .Returns(value: this.categoryStorageProviderFake.GetCategoriesByIdsAsync(categoryIds: eventCategoryIds));
 
-            this.categoryStorageProvider
-                .Setup(x => x.GetCategoriesByIdsAsync(eventCategoryIds))
-                .Returns(this.categoryStorageProviderFake.GetCategoriesByIdsAsync(eventCategoryIds));
+        await this.categoryHelper.BindCategoryNameAsync(events: events);
 
-            await this.categoryHelper.BindCategoryNameAsync(events);
-
-            Assert.AreEqual(true, events[0].CategoryName != "");
-
-        }
+        Assert.AreEqual(expected: true, actual: events[index: 0].CategoryName != "");
     }
 }
-

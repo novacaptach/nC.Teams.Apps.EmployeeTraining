@@ -2,33 +2,32 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Cards
+namespace Microsoft.Teams.Apps.EmployeeTraining.Test.Cards;
+
+using AdaptiveCards;
+using Microsoft.Extensions.Localization;
+using Microsoft.Teams.Apps.EmployeeTraining.Cards;
+using Microsoft.Teams.Apps.EmployeeTraining.Resources;
+using Microsoft.Teams.Apps.EmployeeTraining.Test.TestData;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+
+[TestClass]
+public class EventCancellationCardTest
 {
-    using Moq;
-    using Microsoft.Teams.Apps.EmployeeTraining.Cards;
-    using Microsoft.Extensions.Localization;
-    using AdaptiveCards;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Microsoft.Teams.Apps.EmployeeTraining.Tests.TestData;
+    private Mock<IStringLocalizer<Strings>> localizer;
 
-    [TestClass]
-    public class EventCancellationCardTest
+    [TestInitialize]
+    public void EventCancellationCardTestSetup()
     {
-        Mock<IStringLocalizer<Strings>> localizer;
+        this.localizer = new Mock<IStringLocalizer<Strings>>();
+    }
 
-        [TestInitialize]
-        public void EventCancellationCardTestSetup()
-        {
-            localizer = new Mock<IStringLocalizer<Strings>>();
-        }
+    [TestMethod]
+    public void GetCard()
+    {
+        var Results = EventCancellationCard.GetCancellationCard(localizer: this.localizer.Object, eventEntity: EventWorkflowHelperData.validEventEntity, applicationManifestId: "random");
 
-        [TestMethod]
-        public void GetCard()
-        {
-            var Results = EventCancellationCard.GetCancellationCard(localizer.Object, EventWorkflowHelperData.validEventEntity, "random");
-
-            Assert.AreEqual(Results.ContentType, AdaptiveCard.ContentType);
-        }
-
+        Assert.AreEqual(expected: Results.ContentType, actual: AdaptiveCard.ContentType);
     }
 }

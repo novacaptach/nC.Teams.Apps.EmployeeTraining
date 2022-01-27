@@ -1,0 +1,46 @@
+[*.cs]
+
+indent_style=space
+indent_size=4
+tab_width=4
+
+# SA1623: Property summary documentation should match accessors
+dotnet_diagnostic.sa1623.severity=none
+
+# CA2227: Collection properties should be read only
+dotnet_diagnostic.ca2227.severity=none
+
+# CA1056: Uri properties should not be strings
+dotnet_diagnostic.CA1056.severity = none
+
+# CA1502 cyclomatic complexity
+dotnet_diagnostic.CA1502.severity = none
+
+# CA2007: Do not directly await a Task without calling ConfigureAwait
+dotnet_diagnostic.CA2007.severity = error
+
+# IDE0065: Misplaced using directive
+csharp_using_directive_placement = inside_namespace:warning
+
+# IDE0065: Misplaced using directive
+dotnet_diagnostic.IDE0065.severity = warning
+
+# SA1633: File should have header
+dotnet_diagnostic.SA1633.severity = none
+
+# SA1407: Arithmetic expressions should declare precedence
+dotnet_diagnostic.SA1407.severity = none
+
+# SA1500: Braces for multi-line statements should not share line
+dotnet_diagnostic.SA1500.severity = none
+
+[*.proto]
+
+indent_style=tab
+indent_size=tab
+tab_width=4
+
+[*.{asax,ascx,aspx,cshtml,css,htm,html,js,jsx,master,razor,skin,ts,tsx,vb,xaml,xamlx,xoml,appxmanifest,axml,build,config,csproj,dbml,discomap,dtd,json,jsproj,lsproj,njsproj,nuspec,proj,props,resjson,resw,resx,StyleCop,targets,tasks,vbproj,xml,xsd}]
+indent_style=space
+indent_size=2
+tab_width=2
