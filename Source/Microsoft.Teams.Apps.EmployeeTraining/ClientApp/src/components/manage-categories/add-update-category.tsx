@@ -15,6 +15,7 @@ import {
   updateCategoryAsync,
   getEventCategoriesAsync,
 } from "../../api/manage-categories-api";
+import { AxiosResponse } from "axios";
 
 interface IAddCategoryProps extends WithTranslation, IWithContext {
   category?: ICategory;
@@ -102,7 +103,7 @@ class AddUpdateCategory extends React.Component<
       }
     }
 
-    let response: Object;
+    let response: AxiosResponse<any>;
 
     if (this.props.category) {
       response = await updateCategoryAsync(this.teamId, this.state.category);

@@ -19,6 +19,7 @@ import {
 } from "../../api/user-events-api";
 import EventDetails from "../event-operation-task-module/event-details";
 import withContext, { IWithContext } from "../../providers/context-provider";
+import { AxiosResponse } from "axios";
 
 interface IRegisterRemoveEventProps extends IWithContext, WithTranslation {}
 
@@ -125,7 +126,7 @@ class RegisterRemoveEvent extends React.Component<
       isOperationInProgress: true,
     });
 
-    let response: Object;
+    let response: AxiosResponse<any> | undefined;
     const teamId = this.state.eventDetails
       ? this.state.eventDetails.teamId
       : "0";
